@@ -242,3 +242,287 @@
     </script>
 </body>
 </html>
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PRISMA Web App - Trasformazione Agrumi</title>
+    <style>
+        /* --- STILI CSS --- */
+        :root {
+            --primary: #F26419; 
+            --secondary: #33658A; 
+            --bg-color: #F4F6F8;
+            --sidebar-bg: #2F4858;
+            --text-dark: #333;
+            --text-light: #FFF;
+        }
+
+        body { margin: 0; font-family: 'Segoe UI', Tahoma, sans-serif; background-color: var(--bg-color); display: flex; height: 100vh; overflow: hidden; }
+        
+        /* Sidebar */
+        .sidebar { width: 260px; background-color: var(--sidebar-bg); color: var(--text-light); display: flex; flex-direction: column; }
+        .sidebar-header { padding: 20px; background-color: var(--primary); font-weight: bold; font-size: 1.2rem; text-align: center; }
+        .nav-btn { background: none; border: none; color: var(--text-light); padding: 15px 20px; text-align: left; font-size: 1rem; cursor: pointer; border-left: 4px solid transparent; transition: all 0.3s; }
+        .nav-btn:hover, .nav-btn.active { background-color: rgba(255,255,255,0.1); border-left: 4px solid var(--primary); }
+
+        /* Contenuto */
+        .main-content { flex-grow: 1; padding: 30px; overflow-y: auto; }
+        .view-section { display: none; animation: fadeIn 0.3s ease-in-out; }
+        .view-section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Componenti UI */
+        .card { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        h2 { color: var(--secondary); margin-top: 0; border-bottom: 2px solid var(--bg-color); padding-bottom: 10px; }
+        h3 { color: var(--primary); }
+        
+        .input-group { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding: 10px; background: var(--bg-color); border-radius: 5px; }
+        input, select { padding: 8px; border: 1px solid #ccc; border-radius: 4px; width: 150px; text-align: right; font-size: 1rem; }
+        select { width: 200px; text-align: left; }
+        
+        .result-box { background: #eaf4fc; padding: 15px; border-left: 5px solid var(--secondary); font-weight: bold; display: flex; justify-content: space-between; margin-top: 15px; }
+        .highlight { color: var(--primary); font-size: 1.2rem; }
+
+        /* Tabelle */
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background-color: var(--secondary); color: white; }
+        td.numero { text-align: right; }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <div class="sidebar-header">🍊 PRISMA Web App</div>
+        <button class="nav-btn active" onclick="switchView('dashboard')">📊 Dashboard Processi</button>
+        <button class="nav-btn" onclick="switchView('rese')">📉 Rese a Cascata</button>
+        <button class="nav-btn" onclick="switchView('imballaggi')">📦 Dashboard Imballaggi</button>
+        <button class="nav-btn" onclick="switchView('parametri')">⚙️ Costi Unitari</button>
+    </div>
+
+    <div class="main-content">
+        
+        <div id="dashboard" class="view-section active">
+            <div class="card">
+                <h2>📊 Dashboard Processi - Calcolo Costi</h2>
+                <div class="input-group">
+                    <label>▶ VOLUME INIZIALE (lt)</label>
+                    <input type="number" id="inp-volume" value="32000" oninput="aggiornaTutto()">
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Processo: Disoleazione (Santoro/Joe)</h3>
+                <div class="input-group">
+                    <label>Portata (lt/h)</label>
+                    <input type="number" id="inp-portata-dis" value="1200" oninput="aggiornaTutto()">
+                </div>
+                <div class="input-group">
+                    <label>Potenza Impianto (kW totali)</label>
+                    <input type="number" id="inp-kw-dis" value="24.75" oninput="aggiornaTutto()">
+                </div>
+                <div class="result-box">
+                    <span>Costo Totale Processo (Energia + Personale):</span>
+                    <span id="out-costo-dis" class="highlight">€ 0.00</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="rese" class="view-section">
+            <div class="card">
+                <h2>📉 Simulazione Rese a Cascata</h2>
+                <p>L'uscita di un processo diventa l'entrata del successivo. Calcolo perdite in tempo reale.</p>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Processo</th>
+                            <th>Attivo</th>
+                            <th>Volume Entrata (lt)</th>
+                            <th>Perdita Stimata (lt)</th>
+                            <th>Volume Uscita (lt)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabella-rese">
+                        </tbody>
+                </table>
+                <div class="result-box">
+                    <span>Resa Totale Filiera:</span>
+                    <span id="out-resa-totale" class="highlight">0%</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="imballaggi" class="view-section">
+            <div class="card">
+                <h2>📦 Dashboard Imballaggi</h2>
+                <div class="input-group">
+                    <label>Seleziona Tipo di Packaging:</label>
+                    <select id="sel-packaging" onchange="aggiornaImballaggi()">
+                        <option value="fusti_190">Fusti F.F. 190kg Provv.</option>
+                        <option value="vaschette_14">Vaschette 14kg</option>
+                        <option value="buste_surg_500">Buste 500gr Surgelate</option>
+                    </select>
+                </div>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Componente</th>
+                            <th>Qtà per unità</th>
+                            <th>Costo Unitario (€)</th>
+                            <th>Costo Tot. Componente (€)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabella-imballaggi">
+                        </tbody>
+                </table>
+
+                <div class="result-box">
+                    <span>Costo Imballaggio al Kg di prodotto:</span>
+                    <span id="out-costo-kg-imb" class="highlight">€ 0.00 / kg</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="parametri" class="view-section">
+            <div class="card">
+                <h2>⚙️ Costi Unitari</h2>
+                <div class="input-group"><label>Costo Energia Elettrica (€/kWh)</label><input type="number" step="0.01" id="inp-tariffa-en" value="0.21" oninput="aggiornaTutto()"></div>
+                <div class="input-group"><label>Costo Personale (€/h)</label><input type="number" id="inp-costo-pers" value="30" oninput="aggiornaTutto()"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- NAVIGAZIONE ---
+        function switchView(viewId) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(viewId).classList.add('active');
+            event.currentTarget.classList.add('active');
+        }
+
+        // --- DATABASE IN MEMORIA (Simula i fogli dati di Excel) ---
+        const dbImballaggi = {
+            "fusti_190": {
+                pesoNettoKg: 190,
+                componenti: [
+                    { nome: "Pedana 100x120 usata", qta: 0.25, costoUnitario: 1.50 }, // 1 pedana ogni 4 fusti
+                    { nome: "Sacchetto PET blu", qta: 2, costoUnitario: 1.30 },
+                    { nome: "Fusto di ferro usato", qta: 1, costoUnitario: 5.00 },
+                    { nome: "Stretch foil kg", qta: 0.045, costoUnitario: 3.00 }
+                ]
+            },
+            "vaschette_14": {
+                pesoNettoKg: 14,
+                componenti: [
+                    { nome: "Pedana 80x120", qta: 0.01, costoUnitario: 20.00 }, // Stima pedana divisa
+                    { nome: "Vaschetta 14kg vuota", qta: 1, costoUnitario: 2.45 }
+                ]
+            },
+            "buste_surg_500": {
+                pesoNettoKg: 0.5,
+                componenti: [
+                    { nome: "Cartone (buste 500gr)", qta: 0.1, costoUnitario: 0.725 },
+                    { nome: "Bustina 500gr PE", qta: 1, costoUnitario: 0.07 }
+                ]
+            }
+        };
+
+        // --- MOTORE DI CALCOLO PRINCIPALE ---
+        function aggiornaTutto() {
+            calcolaProcessi();
+            calcolaRese();
+            aggiornaImballaggi();
+        }
+
+        // 1. Calcolo Processi Singoli
+        function calcolaProcessi() {
+            let volume = parseFloat(document.getElementById('inp-volume').value) || 0;
+            let portata = parseFloat(document.getElementById('inp-portata-dis').value) || 1;
+            let kw = parseFloat(document.getElementById('inp-kw-dis').value) || 0;
+            let tariffaEn = parseFloat(document.getElementById('inp-tariffa-en').value) || 0;
+            let costoPers = parseFloat(document.getElementById('inp-costo-pers').value) || 0;
+
+            let ore = volume / portata;
+            let costoTotale = ((kw * tariffaEn) + costoPers) * ore;
+            
+            document.getElementById('out-costo-dis').innerText = "€ " + costoTotale.toFixed(2);
+        }
+
+        // 2. Calcolo Rese a Cascata
+        function calcolaRese() {
+            let volumeIniziale = parseFloat(document.getElementById('inp-volume').value) || 0;
+            
+            // Array dei processi in sequenza (Simula la cascata)
+            let sequenzaProcessi = [
+                { nome: "Disoleazione", attivo: true, perditaFissa: 531.5, perditaPerc: 0.001 },
+                { nome: "Chiarificazione", attivo: false, perditaFissa: 0, perditaPerc: 0.10 },
+                { nome: "Pastorizzazione", attivo: true, perditaFissa: 20, perditaPerc: 0.005 }
+            ];
+
+            let tbody = document.getElementById('tabella-rese');
+            tbody.innerHTML = ""; // Pulisce la tabella
+            
+            let volumeCorrente = volumeIniziale;
+
+            sequenzaProcessi.forEach(proc => {
+                let volumeEntrata = volumeCorrente;
+                let perdita = 0;
+
+                if(proc.attivo) {
+                    perdita = proc.perditaFissa + (volumeEntrata * proc.perditaPerc);
+                    volumeCorrente = volumeEntrata - perdita;
+                }
+
+                // Crea la riga HTML
+                let tr = `<tr>
+                    <td>${proc.nome}</td>
+                    <td>${proc.attivo ? '✅ SI' : '❌ NO'}</td>
+                    <td class="numero">${volumeEntrata.toFixed(1)}</td>
+                    <td class="numero" style="color:red;">- ${perdita.toFixed(1)}</td>
+                    <td class="numero" style="font-weight:bold;">${volumeCorrente.toFixed(1)}</td>
+                </tr>`;
+                tbody.innerHTML += tr;
+            });
+
+            // Calcolo Resa % Totale
+            let resaPerc = (volumeCorrente / volumeIniziale) * 100;
+            document.getElementById('out-resa-totale').innerText = resaPerc.toFixed(2) + "%";
+        }
+
+        // 3. Calcolo Dashboard Imballaggi
+        function aggiornaImballaggi() {
+            let packScelto = document.getElementById('sel-packaging').value;
+            let datiPack = dbImballaggi[packScelto];
+            
+            let tbody = document.getElementById('tabella-imballaggi');
+            tbody.innerHTML = "";
+            
+            let costoTotaleUnita = 0;
+
+            datiPack.componenti.forEach(comp => {
+                let costoComp = comp.qta * comp.costoUnitario;
+                costoTotaleUnita += costoComp;
+                
+                tbody.innerHTML += `<tr>
+                    <td>${comp.nome}</td>
+                    <td class="numero">${comp.qta}</td>
+                    <td class="numero">€ ${comp.costoUnitario.toFixed(3)}</td>
+                    <td class="numero">€ ${costoComp.toFixed(3)}</td>
+                </tr>`;
+            });
+
+            // Calcolo costo al Kg
+            let costoAlKg = costoTotaleUnita / datiPack.pesoNettoKg;
+            document.getElementById('out-costo-kg-imb').innerText = "€ " + costoAlKg.toFixed(4) + " / kg";
+        }
+
+        // Avvio iniziale
+        window.onload = aggiornaTutto;
+    </script>
+</body>
+</html>

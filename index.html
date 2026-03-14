@@ -1,1158 +1,244 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PRISMA · Dashboard Interattiva</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-<style>
-:root{
-  --bg:#0d0f14;--bg2:#13161e;--bg3:#1a1e2a;--surf:#1e2230;
-  --bor:#2e3448;--bor2:#3a4060;
-  --acc:#e8a44a;--acc2:#c07820;--acc-g:rgba(232,164,74,.15);
-  --grn:#4ecb8c;--grn-g:rgba(78,203,140,.12);
-  --blu:#5b9cf6;--blu-g:rgba(91,156,246,.12);
-  --red:#f27070;--red-g:rgba(242,112,112,.1);
-  --txt:#e8eaf2;--txt2:#a0a8c0;--txt3:#6a7290;
-  --fd:'DM Serif Display',serif;--fb:'DM Sans',sans-serif;
-}
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--bg);color:var(--txt);font-family:var(--fb);font-size:14px;line-height:1.6;min-height:100vh}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PRISMA Web App - Trasformazione Agrumi</title>
+    <style>
+        /* --- STILI CSS (Il Design del sito) --- */
+        :root {
+            --primary: #F26419; /* Arancione Agrumi */
+            --secondary: #33658A; /* Blu Industriale */
+            --bg-color: #F4F6F8;
+            --sidebar-bg: #2F4858;
+            --text-dark: #333;
+            --text-light: #FFF;
+        }
 
-/* SIDEBAR */
-.sb{position:fixed;top:0;left:0;width:72px;height:100vh;background:var(--bg2);border-right:1px solid var(--bor);
-  display:flex;flex-direction:column;align-items:center;padding:20px 0;z-index:100;
-  transition:width .3s cubic-bezier(.4,0,.2,1);overflow:hidden}
-.sb:hover{width:250px}
-.sb:hover .nl,.sb:hover .nb,.sb:hover .nsl,.sb:hover .bf{opacity:1}
-.sb:hover .nl{transform:translateX(0)}
-.sb:hover .bs{opacity:0}
-.brand{width:100%;padding:0 16px 22px;border-bottom:1px solid var(--bor);margin-bottom:14px;
-  display:flex;align-items:center;gap:10px;text-decoration:none;position:relative;height:62px}
-.bi{width:38px;height:38px;min-width:38px;background:linear-gradient(135deg,var(--acc),var(--acc2));border-radius:10px;
-  display:flex;align-items:center;justify-content:center;font-size:18px;
-  box-shadow:0 4px 16px rgba(232,164,74,.3)}
-.bf{font-family:var(--fd);font-size:20px;color:var(--txt);opacity:0;white-space:nowrap;transition:opacity .2s}
-.bs{position:absolute;left:50%;transform:translateX(-50%);bottom:26px;font-family:var(--fd);font-size:10px;color:var(--acc);letter-spacing:2px;transition:opacity .2s}
-.ni{display:flex;flex-direction:column;gap:4px;width:100%;padding:0 8px}
-.na{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:10px;cursor:pointer;
-  transition:all .2s;text-decoration:none;color:var(--txt2);border:1px solid transparent;user-select:none}
-.na:hover{background:var(--surf);color:var(--txt)}
-.na.act{background:var(--acc-g);color:var(--acc);border-color:rgba(232,164,74,.25)}
-.nic{font-size:18px;min-width:22px;text-align:center}
-.nl{font-size:13px;font-weight:500;white-space:nowrap;opacity:0;transform:translateX(-8px);transition:all .2s .05s}
-.nb{margin-left:auto;background:var(--acc);color:#000;font-size:10px;font-weight:700;padding:1px 6px;border-radius:20px;min-width:fit-content;opacity:0;transition:opacity .2s .05s}
-.ndiv{width:calc(100% - 16px);height:1px;background:var(--bor);margin:8px 8px}
-.nsl{padding:8px 16px 4px;font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--txt3);white-space:nowrap;opacity:0;transition:opacity .2s}
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
 
-/* MAIN */
-.main{margin-left:72px;min-height:100vh}
-.topbar{position:sticky;top:0;background:rgba(13,15,20,.92);backdrop-filter:blur(20px);
-  border-bottom:1px solid var(--bor);padding:0 28px;height:62px;
-  display:flex;align-items:center;justify-content:space-between;z-index:50}
-.bc{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--txt3)}
-.bc .cur{color:var(--txt);font-weight:600}
-.tr{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.pill{display:flex;align-items:center;gap:6px;padding:5px 13px;background:var(--surf);border:1px solid var(--bor);border-radius:20px;font-size:12px;color:var(--txt2)}
-.dot{width:7px;height:7px;border-radius:50%;background:var(--grn)}
+        /* Menu Laterale */
+        .sidebar {
+            width: 250px;
+            background-color: var(--sidebar-bg);
+            color: var(--text-light);
+            display: flex;
+            flex-direction: column;
+        }
 
-/* PAGES */
-.pg{display:none;padding:28px 32px;animation:fi .3s ease}
-.pg.act{display:block}
-@keyframes fi{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+        .sidebar-header {
+            padding: 20px;
+            background-color: var(--primary);
+            font-weight: bold;
+            font-size: 1.2rem;
+            text-align: center;
+        }
 
-/* TYPOGRAPHY */
-.ey{font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--acc);margin-bottom:6px}
-.ptit{font-family:var(--fd);font-size:30px;line-height:1.2;color:var(--txt)}
-.psub{font-size:13px;color:var(--txt2);margin-top:5px;margin-bottom:24px}
-.stit{font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--txt3);
-  margin-bottom:12px;padding-bottom:9px;border-bottom:1px solid var(--bor);display:flex;align-items:center;gap:8px}
-.stit::before{content:'';width:4px;height:4px;border-radius:50%;background:var(--acc)}
+        .nav-btn {
+            background: none;
+            border: none;
+            color: var(--text-light);
+            padding: 15px 20px;
+            text-align: left;
+            font-size: 1rem;
+            cursor: pointer;
+            border-left: 4px solid transparent;
+            transition: all 0.3s;
+        }
 
-/* KPI */
-.kr{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:24px}
-.kc{background:var(--surf);border:1px solid var(--bor);border-radius:14px;padding:18px 20px;
-  position:relative;overflow:hidden;transition:border-color .2s,transform .2s}
-.kc:hover{border-color:var(--bor2);transform:translateY(-2px)}
-.kc::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:14px 14px 0 0}
-.kc.a::before{background:linear-gradient(90deg,var(--acc),var(--acc2))}
-.kc.g::before{background:var(--grn)}
-.kc.b::before{background:var(--blu)}
-.kc.r::before{background:var(--red)}
-.kl{font-size:11px;color:var(--txt3);font-weight:500;text-transform:uppercase;letter-spacing:.8px;margin-bottom:7px}
-.kv{font-family:var(--fd);font-size:26px;color:var(--txt);line-height:1}
-.ku{font-size:12px;color:var(--txt2);margin-left:3px}
-.ks{font-size:11px;color:var(--txt3);margin-top:5px}
-.kd{display:inline-flex;align-items:center;font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;margin-top:3px}
-.kd.p{background:var(--grn-g);color:var(--grn)}
-.kd.n{background:var(--red-g);color:var(--red)}
+        .nav-btn:hover, .nav-btn.active {
+            background-color: rgba(255,255,255,0.1);
+            border-left: 4px solid var(--primary);
+        }
 
-/* INPUTS */
-.irow{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
-.irow label{font-size:12px;color:var(--txt2);font-weight:500;min-width:220px}
-input[type=number],select{
-  background:var(--bg3);border:1px solid var(--bor2);border-radius:8px;
-  color:var(--txt);font-family:var(--fb);font-size:13px;padding:7px 12px;
-  outline:none;transition:border-color .2s,box-shadow .2s}
-input[type=number]{color:var(--acc);font-family:var(--fd);font-size:15px;font-weight:600;width:150px}
-input[type=number]:focus,select:focus{border-color:var(--acc);box-shadow:0 0 0 3px var(--acc-g)}
-select{cursor:pointer;min-width:220px}
-select option{background:var(--bg3)}
-.ibox{background:var(--surf);border:1px solid var(--bor);border-radius:14px;padding:20px 22px;margin-bottom:22px}
-.ibox h4{font-size:13px;font-weight:600;color:var(--txt);margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--bor)}
-.badge-input{display:inline-flex;align-items:center;padding:4px 12px;background:var(--acc-g);
-  border:1px solid rgba(232,164,74,.3);border-radius:20px;font-size:12px;color:var(--acc);font-weight:600}
-.badge-ok{display:inline-flex;align-items:center;padding:4px 12px;background:var(--grn-g);
-  border:1px solid rgba(78,203,140,.3);border-radius:20px;font-size:12px;color:var(--grn);font-weight:600}
+        /* Area di Contenuto */
+        .main-content {
+            flex-grow: 1;
+            padding: 30px;
+            overflow-y: auto;
+        }
 
-/* TABLES */
-.tw{background:var(--surf);border:1px solid var(--bor);border-radius:14px;overflow:hidden;margin-bottom:20px}
-.th2{padding:13px 18px;border-bottom:1px solid var(--bor);display:flex;align-items:center;justify-content:space-between}
-.th2 h3{font-size:13px;font-weight:600;color:var(--txt)}
-.th2 span{font-size:11px;color:var(--txt3)}
-table{width:100%;border-collapse:collapse}
-th{background:var(--bg3);padding:9px 13px;text-align:left;font-size:10px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:var(--txt3);white-space:nowrap}
-td{padding:9px 13px;border-top:1px solid var(--bor);font-size:12px;color:var(--txt2);vertical-align:middle}
-tr:hover td{background:var(--bg3)}
-td.n{font-family:var(--fd);font-size:13px;color:var(--txt);text-align:right;white-space:nowrap}
-td.av{color:var(--acc) !important}
-td.gv{color:var(--grn) !important}
-td.rv{color:var(--red) !important}
-td.bv{color:var(--blu) !important}
-td.lc{font-weight:500;color:var(--txt)}
-td.sl{color:var(--txt3);font-size:11px;padding-left:28px}
-.tag{display:inline-block;padding:2px 9px;border-radius:20px;font-size:10px;font-weight:700}
-.tag.y{background:var(--grn-g);color:var(--grn)}
-.tag.no{background:rgba(160,168,192,.08);color:var(--txt3)}
-.tag.ind{background:var(--blu-g);color:var(--blu)}
+        /* Sezioni (Fogli) */
+        .view-section {
+            display: none;
+            animation: fadeIn 0.4s ease-in-out;
+        }
 
-/* GRID */
-.g2{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:20px}
-.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:20px}
-@media(max-width:1100px){.g2,.g3{grid-template-columns:1fr}}
+        .view-section.active {
+            display: block;
+        }
 
-/* INFO CARD */
-.ic{background:var(--surf);border:1px solid var(--bor);border-radius:14px;padding:18px 20px}
-.ic h4{font-size:12px;font-weight:600;color:var(--txt);margin-bottom:12px;padding-bottom:9px;border-bottom:1px solid var(--bor)}
-.ir{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:6px 0;border-bottom:1px solid rgba(46,52,72,.5)}
-.ir:last-child{border-bottom:none}
-.ik{font-size:11px;color:var(--txt3)}
-.iv{font-size:12px;font-weight:600;color:var(--txt);text-align:right}
-.iv.a{color:var(--acc)}
-.iv.g{color:var(--grn)}
-.iv.r{color:var(--red)}
-.iv.b{color:var(--blu)}
-.sep{border-top:2px solid var(--bor2)!important;margin-top:4px;padding-top:10px!important}
-.sep2{border-top:2px solid var(--acc)!important;margin-top:4px;padding-top:10px!important}
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
 
-/* HIGHLIGHT */
-.hl{background:linear-gradient(135deg,rgba(232,164,74,.08),rgba(192,120,32,.04));
-  border:1px solid rgba(232,164,74,.2);border-radius:14px;padding:18px 22px;margin-bottom:22px;
-  display:flex;align-items:center;gap:18px}
-.hl-ico{font-size:32px}
-.hl h3{font-family:var(--fd);font-size:18px;color:var(--acc)}
-.hl p{font-size:12px;color:var(--txt2);margin-top:3px}
+        /* Card e Tabelle */
+        .card {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
 
-/* PROGRESS */
-.pr{margin-bottom:11px}
-.prh{display:flex;justify-content:space-between;margin-bottom:5px}
-.prl{font-size:11px;color:var(--txt2)}
-.prv{font-size:11px;font-weight:600;color:var(--txt)}
-.prb{height:6px;background:var(--bg3);border-radius:10px;overflow:hidden}
-.prf{height:100%;border-radius:10px;transition:width .8s ease}
-.fa{background:linear-gradient(90deg,var(--acc),var(--acc2))}
-.fg{background:var(--grn)}
-.fb{background:var(--blu)}
-.fr{background:var(--red)}
-.fd2{background:var(--txt3)}
+        h2 { color: var(--secondary); margin-top: 0; border-bottom: 2px solid var(--bg-color); padding-bottom: 10px; }
+        
+        .input-group {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: var(--bg-color);
+            border-radius: 5px;
+        }
 
-/* TOGGLE */
-.sw{position:relative;display:inline-block;width:42px;height:22px}
-.sw input{opacity:0;width:0;height:0}
-.sl2{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:var(--bg3);border:1px solid var(--bor2);border-radius:22px;transition:.3s}
-.sl2::before{position:absolute;content:'';height:16px;width:16px;left:3px;bottom:2px;background:var(--txt3);border-radius:50%;transition:.3s}
-input:checked+.sl2{background:var(--grn-g);border-color:var(--grn)}
-input:checked+.sl2::before{transform:translateX(20px);background:var(--grn)}
+        input {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: 120px;
+            text-align: right;
+            font-size: 1rem;
+        }
+        
+        .result-box {
+            background: #eaf4fc;
+            padding: 15px;
+            border-left: 5px solid var(--secondary);
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
 
-/* CHART */
-.ch-wrap{background:var(--surf);border:1px solid var(--bor);border-radius:14px;padding:18px 20px;margin-bottom:20px}
-.ch-wrap h4{font-size:11px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:var(--txt3);
-  margin-bottom:14px;padding-bottom:9px;border-bottom:1px solid var(--bor);display:flex;align-items:center;gap:8px}
-.ch-wrap h4::before{content:'';width:4px;height:4px;border-radius:50%;background:var(--acc)}
-
-/* PKG CARDS */
-.pkcg{display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:11px;margin-bottom:22px}
-.pkc{background:var(--surf);border:1px solid var(--bor);border-radius:12px;padding:14px;transition:border-color .2s,transform .2s;cursor:pointer}
-.pkc:hover{border-color:var(--bor2);transform:translateY(-2px)}
-.pkc.sel{border-color:rgba(232,164,74,.5);background:linear-gradient(135deg,rgba(232,164,74,.07),var(--surf))}
-.pkn{font-size:12px;font-weight:600;color:var(--txt);margin-bottom:3px}
-.pkw{font-size:10px;color:var(--txt3);margin-bottom:8px}
-.pkv{font-family:var(--fd);font-size:20px;color:var(--acc)}
-.pku{font-size:10px;color:var(--txt3)}
-.pkp{font-size:11px;color:var(--txt2);margin-top:3px}
-
-/* NOTE */
-.nb2{background:var(--bg3);border:1px solid var(--bor);border-left:3px solid var(--blu);
-  border-radius:0 10px 10px 0;padding:12px 16px;font-size:12px;color:var(--txt2);margin-bottom:18px;line-height:1.7}
-.nb2 strong{color:var(--blu)}
-
-/* FOOTER */
-.pf{margin-top:36px;padding-top:18px;border-top:1px solid var(--bor);
-  display:flex;align-items:center;justify-content:space-between;color:var(--txt3);font-size:11px}
-
-::-webkit-scrollbar{width:6px;height:6px}
-::-webkit-scrollbar-track{background:var(--bg)}
-::-webkit-scrollbar-thumb{background:var(--bor2);border-radius:3px}
-@media(max-width:768px){.sb{display:none}.main{margin-left:0}.pg{padding:16px}.kr{grid-template-columns:1fr 1fr}}
-</style>
+        .highlight { color: var(--primary); font-size: 1.2rem; }
+    </style>
 </head>
 <body>
 
-<!-- SIDEBAR -->
-<nav class="sb">
-  <a class="brand" href="#" onclick="return false">
-    <div class="bi">🍊</div>
-    <span class="bf">PRISMA</span>
-    <span class="bs">PRI</span>
-  </a>
-  <div class="nsl">DASHBOARD</div>
-  <div class="ni">
-    <a class="na act" id="nav-trasf" onclick="SP('trasf');return false">
-      <span class="nic">⚙️</span><span class="nl">Trasformazione</span><span class="nb">LIVE</span>
-    </a>
-    <a class="na" id="nav-proc" onclick="SP('proc');return false">
-      <span class="nic">🔬</span><span class="nl">Processi</span>
-    </a>
-    <a class="na" id="nav-imb" onclick="SP('imb');return false">
-      <span class="nic">📦</span><span class="nl">Imballaggi</span>
-    </a>
-    <div class="ndiv"></div>
-    <div class="nsl">PARAMETRI</div>
-    <a class="na" id="nav-cu" onclick="SP('cu');return false">
-      <span class="nic">💶</span><span class="nl">Costi Unitari</span>
-    </a>
-  </div>
-</nav>
-
-<div class="main">
-  <div class="topbar">
-    <div class="bc" id="bc">PRISMA &rsaquo; <span class="cur">Dashboard Trasformazione</span></div>
-    <div class="tr">
-      <div class="pill"><div class="dot"></div><span id="tb-agrume">🍊 Limone</span></div>
-      <div class="pill" id="tb-kg" style="color:var(--grn);font-weight:600">✓ 100.000 kg</div>
+    <div class="sidebar">
+        <div class="sidebar-header">🍊 PRISMA Web App</div>
+        <button class="nav-btn active" onclick="switchView('dashboard')">📊 Dashboard Processi</button>
+        <button class="nav-btn" onclick="switchView('parametri')">⚙️ Parametri / Costi Unitari</button>
+        <button class="nav-btn" onclick="switchView('imballaggi')">📦 Dashboard Imballaggi</button>
     </div>
-  </div>
 
-<!-- ═══════════════════════════════
-     PAGINA 1 – TRASFORMAZIONE
-═══════════════════════════════ -->
-<div class="pg act" id="pg-trasf">
-  <div class="ey">Analisi Costi · Prodotti Agrumari</div>
-  <h1 class="ptit">Dashboard Trasformazione</h1>
-  <p class="psub">Modifica le celle BLU — tutti i calcoli e i grafici si aggiornano in tempo reale</p>
+    <div class="main-content">
+        
+        <div id="dashboard" class="view-section active">
+            <div class="card">
+                <h2>📊 Dashboard Processi - Calcolo in tempo reale</h2>
+                <p>Inserisci i dati di input per simulare i costi della sessione. (I costi energetici e del personale derivano dalla scheda Parametri).</p>
+                
+                <div class="input-group">
+                    <label>▶ VOLUME DA LAVORARE (lt) <i>(Input globale)</i></label>
+                    <input type="number" id="inp-volume" value="32000" oninput="calcolaDashboard()">
+                </div>
+            </div>
 
-  <div class="ibox">
-    <h4>⚙️ INPUT SESSIONE</h4>
-    <div class="irow"><label>Quantità frutta ingresso (kg)</label>
-      <input type="number" id="t-kg" value="100000" min="1000" step="1000" oninput="runAll()">
-      <span class="badge-input" id="t-kg-badge">100.000 kg</span></div>
-    <div class="irow"><label>Tipo agrume</label>
-      <select id="t-agrume" onchange="runAll()">
-        <option value="Limone">🍊 Limone</option>
-        <option value="Mandarino">🍊 Mandarino</option>
-        <option value="Arancia">🍊 Arancia/Pompelmo</option>
-        <option value="Bergamotto">🍊 Bergamotto</option>
-      </select>
-      <span class="badge-ok">✓ Compatibile</span></div>
-    <div class="irow"><label>Opzione scarico (Fase 3)</label>
-      <select id="t-scarico" onchange="runAll()">
-        <option value="Rinfusa">Rinfusa</option>
-        <option value="Bins+Coccodrillo">Bins + Coccodrillo</option>
-        <option value="Bins+Magnoni" selected>Bins + Magnoni</option>
-      </select></div>
-    <div class="irow"><label>Linea preparazione (Fase 4)</label>
-      <select id="t-linea-prep" onchange="runAll()">
-        <option value="A">Linea A</option><option value="B">Linea B</option>
-        <option value="C">Linea C</option><option value="D" selected>Linea D</option>
-      </select></div>
-    <div class="irow"><label>Linea trasformazione (Fase 5)</label>
-      <select id="t-linea-trasf" onchange="runAll()">
-        <option value="B/SF" selected>B/SF</option>
-        <option value="BOE+1100">BOE + 1100</option>
-        <option value="BOE+POLY">BOE + POLY</option>
-        <option value="BOE+POLY GOE">BOE + POLY GOE</option>
-        <option value="GOE EST+POLY">GOE EST + POLY</option>
-        <option value="GOE EST+400">GOE EST + 400</option>
-        <option value="GOE INT+POLY">GOE INT + POLY</option>
-        <option value="TORCHI FASO">TORCHI FASO</option>
-        <option value="400">400</option>
-      </select></div>
-    <div class="irow"><label>Resa succo (%)</label>
-      <input type="number" id="t-resa-succo" value="32" min="1" max="60" step="0.5" oninput="runAll()"></div>
-    <div class="irow"><label>Resa torchiato (%)</label>
-      <input type="number" id="t-resa-torch" value="10" min="0" max="30" step="0.5" oninput="runAll()"></div>
-    <div class="irow"><label>Resa scorze (%)</label>
-      <input type="number" id="t-resa-scorze" value="58" min="0" max="80" step="0.5" oninput="runAll()"></div>
-    <div class="irow"><label>Prezzo vendita succo (€/kg)</label>
-      <input type="number" id="t-prezzo-succo" value="1.2525" min="0.1" step="0.01" oninput="runAll()"></div>
-    <div class="irow"><label>Prezzo torchiato (€/kg)</label>
-      <input type="number" id="t-prezzo-torch" value="0.30" min="0" step="0.01" oninput="runAll()"></div>
-    <div class="irow"><label>Prezzo scorze (€/kg)</label>
-      <input type="number" id="t-prezzo-scorze" value="0.006" min="0" step="0.001" oninput="runAll()"></div>
-    <div class="irow"><label>Costo smaltimento scarti (€/ton)</label>
-      <input type="number" id="t-smalt" value="180" min="0" step="10" oninput="runAll()"></div>
-    <div class="irow"><label>Manutenzione sessione (€)</label>
-      <input type="number" id="t-manut" value="0" min="0" step="50" oninput="runAll()"></div>
-  </div>
+            <div class="card">
+                <h3>Processo: Disoleazione (Santoro/Joe)</h3>
+                <div class="input-group">
+                    <label>Portata (lt/h)</label>
+                    <input type="number" id="inp-portata" value="1200" oninput="calcolaDashboard()">
+                </div>
+                <div class="input-group">
+                    <label>Potenza Impianto (kW totali)</label>
+                    <input type="number" id="inp-kw" value="24.75" oninput="calcolaDashboard()">
+                </div>
 
-  <div class="kr">
-    <div class="kc a"><div class="kl">Costo Totale Diretto</div><div class="kv" id="k-ctot">—</div><div class="ks" id="k-ctot-s">—</div></div>
-    <div class="kc g"><div class="kl">Ricavo Succo</div><div class="kv" id="k-ricavo">—</div><div class="ks" id="k-ricavo-s">—</div></div>
-    <div class="kc b"><div class="kl">Margine Lordo</div><div class="kv" id="k-margine">—</div><div class="ks" id="k-margine-s">—</div></div>
-    <div class="kc r"><div class="kl">Costo Netto €/lt</div><div class="kv" id="k-netto">—</div><div class="ks" id="k-netto-s">—</div></div>
-  </div>
+                <div class="result-box">
+                    <span>Ore di funzionamento stimate:</span>
+                    <span id="out-ore" class="highlight">0.00 h</span>
+                </div>
+                <div class="result-box">
+                    <span>Costo Totale Processo (Energia + Personale):</span>
+                    <span id="out-costo-totale" class="highlight">€ 0.00</span>
+                </div>
+            </div>
+        </div>
 
-  <div class="hl"><div class="hl-ico">⚡</div>
-    <div><h3 id="hl-title">—</h3><p id="hl-body">—</p></div></div>
+        <div id="parametri" class="view-section">
+            <div class="card">
+                <h2>⚙️ Parametri Generali e Costi Unitari</h2>
+                <p>Modificando questi valori (testo blu in Excel), tutte le dashboard si aggiorneranno automaticamente.</p>
+                
+                <div class="input-group">
+                    <label>Costo Energia Elettrica (€/kWh)</label>
+                    <input type="number" step="0.01" id="inp-tariffa-en" value="0.21" oninput="calcolaDashboard()">
+                </div>
+                <div class="input-group">
+                    <label>Costo Personale (€/h) - Addetto Processo</label>
+                    <input type="number" id="inp-costo-pers" value="30" oninput="calcolaDashboard()">
+                </div>
+                <div class="input-group">
+                    <label>Costo Vapore (€/kg)</label>
+                    <input type="number" step="0.0001" id="inp-tariffa-vap" value="0.0555" oninput="calcolaDashboard()">
+                </div>
+            </div>
+        </div>
 
-  <div class="g2">
-    <div>
-      <div class="stit">Fasi Operative Dirette</div>
-      <div class="tw"><table>
-        <thead><tr><th>Fase</th><th>Opzione</th><th style="text-align:right">kW</th><th style="text-align:right">Ore</th><th style="text-align:right">€/h</th><th style="text-align:right">Costo €</th></tr></thead>
-        <tbody id="t-fasi-tbody"></tbody>
-      </table></div>
-      <div class="stit">Fasi Indirette</div>
-      <div class="tw"><table>
-        <thead><tr><th>Fase</th><th style="text-align:right">€/h</th><th style="text-align:right">Costo Sessione</th></tr></thead>
-        <tbody>
-          <tr><td class="lc">1. Acquisto frutta</td><td class="n" id="ti-acq-h">—</td><td class="n"><span class="tag ind" id="ti-acq">—</span></td></tr>
-          <tr><td class="lc">2. Ricezione frutta</td><td class="n" id="ti-ric-h">—</td><td class="n"><span class="tag ind" id="ti-ric">—</span></td></tr>
-          <tr style="background:var(--bg3)"><td class="lc" colspan="2"><strong>Totale indiretti</strong></td><td class="n bv"><strong id="ti-tot">—</strong></td></tr>
-        </tbody>
-      </table></div>
-      <div class="stit">Composizione Costi Diretti</div>
-      <div class="ic" id="prog-box"></div>
+        <div id="imballaggi" class="view-section">
+            <div class="card">
+                <h2>📦 Dashboard Imballaggi</h2>
+                <p>Qui verrà inserita la logica per il calcolo delle pedane, fusti, stretch foil, ecc., collegata ai costi unitari.</p>
+                <p><i>Modulo in fase di sviluppo...</i></p>
+            </div>
+        </div>
+
     </div>
-    <div>
-      <div class="stit">Rese per Prodotto</div>
-      <div class="tw"><table>
-        <thead><tr><th>Prodotto</th><th style="text-align:right">%</th><th style="text-align:right">kg</th><th style="text-align:right">€/kg</th><th style="text-align:right">Ricavo €</th></tr></thead>
-        <tbody id="t-rese-tbody"></tbody>
-      </table></div>
-      <div class="stit">★ Riepilogo Costo Netto</div>
-      <div class="ic" id="riep-box"></div>
-    </div>
-  </div>
 
-  <div class="stit">📊 Grafici Dinamici</div>
-  <div class="g3">
-    <div class="ch-wrap"><h4>Composizione Costi Diretti</h4>
-      <div style="height:220px;position:relative"><canvas id="ch-t-donut"></canvas></div></div>
-    <div class="ch-wrap"><h4>Costi per Fase (€)</h4>
-      <div style="height:220px;position:relative"><canvas id="ch-t-bar"></canvas></div></div>
-    <div class="ch-wrap"><h4>Ricavi vs Costi (€)</h4>
-      <div style="height:220px;position:relative"><canvas id="ch-t-wfall"></canvas></div></div>
-  </div>
-  <div class="pf"><span>PRISMA · Analisi Costi</span><span>Ricalcolo in tempo reale</span></div>
-</div>
-
-<!-- ═══════════════════════════════
-     PAGINA 2 – PROCESSI
-═══════════════════════════════ -->
-<div class="pg" id="pg-proc">
-  <div class="ey">Analisi Processi · Filiera Completa</div>
-  <h1 class="ptit">Dashboard Processi</h1>
-  <p class="psub">Attiva/disattiva i processi con i toggle — la cascata rese si ricalcola in tempo reale</p>
-
-  <div class="ibox">
-    <h4>▶ INPUT SESSIONE</h4>
-    <div class="irow"><label>🍊 Agrume</label>
-      <select id="p-agrume" onchange="runAll()">
-        <option value="Limone">🍊 Limone</option>
-        <option value="Mandarino">Mandarino</option>
-        <option value="Arancia">Arancia/Pompelmo</option>
-        <option value="Bergamotto">Bergamotto</option>
-      </select></div>
-    <div class="irow"><label>Volume da lavorare (lt)</label>
-      <input type="number" id="p-vol" value="32000" min="100" step="500" oninput="runAll()">
-      <span class="badge-input" id="p-vol-badge">32.000 lt</span></div>
-  </div>
-
-  <div class="kr">
-    <div class="kc a"><div class="kl">Volume Trattato</div><div class="kv" id="pk-vol">32.000<span class="ku">lt</span></div></div>
-    <div class="kc g"><div class="kl">Costo Totale Processi</div><div class="kv" id="pk-ctot">—</div><div class="ks" id="pk-ctot-s">—</div></div>
-    <div class="kc b"><div class="kl">Costo Filiera €/lt</div><div class="kv" id="pk-fil">—</div></div>
-    <div class="kc"><div class="kl">Resa Totale Filiera</div><div class="kv" id="pk-resa">—</div><div class="ks" id="pk-resa-s">—</div></div>
-  </div>
-
-  <div class="nb2"><strong>ℹ️</strong> Il volume di uscita di ogni processo attivo diventa automaticamente il volume di entrata del successivo. I processi su NO bypassano senza perdite.</div>
-
-  <div class="stit">Processi — Toggle Attiva/Disattiva</div>
-  <div class="tw">
-    <div class="th2"><h3>Costi per Processo</h3><span id="proc-vol-ref">Rif.: 32.000 lt</span></div>
-    <div style="overflow-x:auto">
-    <table>
-      <thead><tr><th>On/Off</th><th>Processo</th><th style="text-align:right">Vol. (lt)</th><th style="text-align:right">Portata</th><th style="text-align:right">Ore</th><th style="text-align:right">kW</th><th style="text-align:right">En. €</th><th style="text-align:right">Vap. €</th><th style="text-align:right">Pers. €</th><th style="text-align:right">Tot. €</th><th style="text-align:right">€/lt</th><th>Selezione</th></tr></thead>
-      <tbody id="proc-tbody"></tbody>
-    </table>
-    </div>
-  </div>
-
-  <div class="g2">
-    <div>
-      <div class="stit">Riepilogo Costi</div>
-      <div class="ic" id="proc-riep-box"></div>
-      <div class="nb2" style="margin-top:14px" id="proc-pkg-note">
-        <strong>📌 Packaging:</strong> —</div>
-    </div>
-    <div>
-      <div class="stit">Cascata Reale — Rese</div>
-      <div class="ic" id="proc-cascata-box"></div>
-    </div>
-  </div>
-
-  <div class="stit">📊 Grafici Dinamici Processi</div>
-  <div class="g2">
-    <div class="ch-wrap"><h4>Costo per Processo Attivo (€)</h4>
-      <div style="height:240px;position:relative"><canvas id="ch-p-bar"></canvas></div></div>
-    <div class="ch-wrap"><h4>Cascata Volumi — Entrata vs Uscita (lt)</h4>
-      <div style="height:240px;position:relative"><canvas id="ch-p-cascata"></canvas></div></div>
-  </div>
-  <div class="pf"><span>PRISMA · Analisi Costi</span><span>Cascata rese in tempo reale</span></div>
-</div>
-
-<!-- ═══════════════════════════════
-     PAGINA 3 – IMBALLAGGI
-═══════════════════════════════ -->
-<div class="pg" id="pg-imb">
-  <div class="ey">Costi Packaging · Tutti i Formati</div>
-  <h1 class="ptit">Dashboard Imballaggi</h1>
-  <p class="psub">Seleziona il packaging — i costi si aggiornano automaticamente dai Costi Unitari</p>
-
-  <div class="ibox">
-    <h4>📦 INPUT PACKAGING</h4>
-    <div class="irow"><label>Tipo di packaging</label>
-      <select id="i-pkg" onchange="runAll()">
-        <option value="acma">Buste 500gr Surgelate (ACMA)</option>
-        <option value="rex">Rex 500gr brick (Galdi)</option>
-        <option value="goglio">Buste Goglio 3kg</option>
-        <option value="vasch">Vaschette 14kg (Magnoni)</option>
-        <option value="latte">Latte 20kg (Magnoni)</option>
-        <option value="fbl">Fusti FBL 170kg Provv.</option>
-        <option value="ff190" selected>F.F. 190kg Provv. (Magnoni)</option>
-        <option value="ff190std">F.F. Standard 190kg</option>
-      </select></div>
-    <div class="irow"><label>Agrume / Prodotto</label>
-      <select id="i-agrume" onchange="runAll()">
-        <option value="Limone">Limone</option>
-        <option value="Mandarino">Mandarino</option>
-        <option value="Arancia">Arancia/Pompelmo</option>
-        <option value="Bergamotto">Bergamotto</option>
-      </select></div>
-  </div>
-
-  <div class="kr">
-    <div class="kc a"><div class="kl">Costo Imball./Unità</div><div class="kv" id="ik-unita">—</div><div class="ks" id="ik-unita-s">—</div></div>
-    <div class="kc g"><div class="kl">★ Costo €/kg</div><div class="kv" id="ik-kg">—</div><div class="ks" id="ik-kg-s">—</div></div>
-    <div class="kc b"><div class="kl">Formato Min €/kg</div><div class="kv" id="ik-min">—</div><div class="ks" id="ik-min-s">—</div></div>
-    <div class="kc r"><div class="kl">Formato Max €/kg</div><div class="kv" id="ik-max">—</div><div class="ks" id="ik-max-s">—</div></div>
-  </div>
-
-  <div class="g2">
-    <div>
-      <div class="stit" id="imb-det-title">Componenti Imballaggio</div>
-      <div class="tw"><table>
-        <thead><tr><th>Componente</th><th style="text-align:right">Qtà</th><th style="text-align:right">€/unit.</th><th style="text-align:right">€/unità prod.</th></tr></thead>
-        <tbody id="imb-comp-tbody"></tbody>
-      </table></div>
-      <div class="nb2" id="imb-note">—</div>
-    </div>
-    <div>
-      <div class="stit">Impianto & Configurazione</div>
-      <div class="ic" id="imb-config-box" style="margin-bottom:18px"></div>
-      <div class="stit">Confronto €/kg — Barre</div>
-      <div class="ic" id="imb-prog-box"></div>
-    </div>
-  </div>
-
-  <div class="stit">★ Tutti i Formati</div>
-  <div class="pkcg" id="imb-cards"></div>
-
-  <div class="stit">📊 Grafici Dinamici Imballaggi</div>
-  <div class="g2">
-    <div class="ch-wrap"><h4>Costo €/kg per Formato</h4>
-      <div style="height:260px;position:relative"><canvas id="ch-i-bar"></canvas></div></div>
-    <div class="ch-wrap"><h4>Composizione Formato Selezionato</h4>
-      <div style="height:260px;position:relative"><canvas id="ch-i-donut"></canvas></div></div>
-  </div>
-  <div class="pf"><span>PRISMA · Analisi Costi</span><span>Prezzi da Costi Unitari</span></div>
-</div>
-
-<!-- ═══════════════════════════════
-     PAGINA 4 – COSTI UNITARI
-═══════════════════════════════ -->
-<div class="pg" id="pg-cu">
-  <div class="ey">Parametri Master · Input Globali</div>
-  <h1 class="ptit">Costi Unitari</h1>
-  <p class="psub">Modifica questi valori — si propagano automaticamente in tutte le altre Dashboard</p>
-
-  <div class="nb2"><strong>🔗 Collegamento totale:</strong> Ogni modifica aggiorna in tempo reale tutte e 3 le dashboard, i grafici, e tutti i calcoli della filiera completa.</div>
-
-  <div class="g2">
-    <div>
-      <div class="ibox">
-        <h4>⚡ Energia &amp; 💨 Vapore</h4>
-        <div class="irow"><label>Costo energia elettrica (€/kWh)</label>
-          <input type="number" id="cu-kwh" value="0.21" min="0.01" step="0.01" oninput="runAll()"></div>
-        <div class="irow"><label>Costo vapore saturo (€/kg)</label>
-          <input type="number" id="cu-vap" value="0.0555" min="0.001" step="0.001" oninput="runAll()"></div>
-      </div>
-      <div class="ibox">
-        <h4>👷 Personale — €/h lordi</h4>
-        <div class="irow"><label>Addetto acquisto frutta (F.1)</label><input type="number" id="cu-p1" value="50" min="10" step="1" oninput="runAll()"></div>
-        <div class="irow"><label>Addetto ricezione frutta (F.2)</label><input type="number" id="cu-p2" value="45" min="10" step="1" oninput="runAll()"></div>
-        <div class="irow"><label>Carrellista / Scarico (F.3)</label><input type="number" id="cu-p3" value="30" min="10" step="1" oninput="runAll()"></div>
-        <div class="irow"><label>Addetto preparazione (F.4)</label><input type="number" id="cu-p4" value="30" min="10" step="1" oninput="runAll()"></div>
-        <div class="irow"><label>Addetto trasformazione (F.5)</label><input type="number" id="cu-p5" value="25" min="10" step="1" oninput="runAll()"></div>
-        <div class="irow"><label>Addetto centrifugazione (F.6)</label><input type="number" id="cu-p6" value="35" min="10" step="1" oninput="runAll()"></div>
-        <div class="irow"><label>Addetto lavaggio linee (F.9)</label><input type="number" id="cu-p9" value="30" min="10" step="1" oninput="runAll()"></div>
-        <div class="irow"><label>Addetto Chiarificazione</label><input type="number" id="cu-pch" value="35" min="10" step="1" oninput="runAll()"></div>
-        <div class="irow"><label>Addetto Pastorizzazione</label><input type="number" id="cu-ppa" value="30" min="10" step="1" oninput="runAll()"></div>
-        <div class="irow"><label>Addetto Disoleazione</label><input type="number" id="cu-pdi" value="30" min="10" step="1" oninput="runAll()"></div>
-        <div class="irow"><label>Addetto Microfiltrazione</label><input type="number" id="cu-pmi" value="30" min="10" step="1" oninput="runAll()"></div>
-        <div class="irow"><label>Addetto Concentrazione</label><input type="number" id="cu-pco" value="30" min="10" step="1" oninput="runAll()"></div>
-        <div class="irow"><label>Addetto Confezionamento</label><input type="number" id="cu-pcf" value="30" min="10" step="1" oninput="runAll()"></div>
-        <div class="irow"><label>Addetto manovalanza</label><input type="number" id="cu-pma" value="30" min="10" step="1" oninput="runAll()"></div>
-      </div>
-    </div>
-    <div>
-      <div class="ibox">
-        <h4>📦 Materiali Imballaggio (€)</h4>
-        <div class="irow"><label>Pedana 80×120 nuova</label><input type="number" id="cu-ped80" value="20" min="0" step="0.5" oninput="runAll()"></div>
-        <div class="irow"><label>Pedana 100×120 usata</label><input type="number" id="cu-pedus" value="1.5" min="0" step="0.1" oninput="runAll()"></div>
-        <div class="irow"><label>Pedana 120×120 nuova</label><input type="number" id="cu-ped120" value="21.26" min="0" step="0.1" oninput="runAll()"></div>
-        <div class="irow"><label>Bustina 500gr ACMA</label><input type="number" id="cu-busta500" value="0.07" min="0" step="0.005" oninput="runAll()"></div>
-        <div class="irow"><label>Cartone buste 500gr</label><input type="number" id="cu-cart500" value="0.725" min="0" step="0.01" oninput="runAll()"></div>
-        <div class="irow"><label>REX 500gr Limone</label><input type="number" id="cu-rex" value="0.10442" min="0" step="0.001" oninput="runAll()"></div>
-        <div class="irow"><label>Busta Goglio 3kg</label><input type="number" id="cu-gog" value="0.495" min="0" step="0.01" oninput="runAll()"></div>
-        <div class="irow"><label>Cartone Goglio</label><input type="number" id="cu-cgog" value="0.725" min="0" step="0.01" oninput="runAll()"></div>
-        <div class="irow"><label>Vaschetta 14kg</label><input type="number" id="cu-vasch" value="2.45" min="0" step="0.05" oninput="runAll()"></div>
-        <div class="irow"><label>Coperchio vaschetta</label><input type="number" id="cu-cop" value="0.20" min="0" step="0.01" oninput="runAll()"></div>
-        <div class="irow"><label>Latta 20kg</label><input type="number" id="cu-latta" value="6.52" min="0" step="0.1" oninput="runAll()"></div>
-        <div class="irow"><label>Sacchetto PET blu</label><input type="number" id="cu-pet" value="1.3" min="0" step="0.05" oninput="runAll()"></div>
-        <div class="irow"><label>Stretch foil (€/kg)</label><input type="number" id="cu-str" value="3.0" min="0" step="0.1" oninput="runAll()"></div>
-        <div class="irow"><label>Fusto ferro usato</label><input type="number" id="cu-fusto" value="5.0" min="0" step="0.1" oninput="runAll()"></div>
-        <div class="irow"><label>FBL usato</label><input type="number" id="cu-fbl" value="3.0" min="0" step="0.1" oninput="runAll()"></div>
-        <div class="irow"><label>Sacchetto blu piccolo</label><input type="number" id="cu-sblu" value="0.1" min="0" step="0.01" oninput="runAll()"></div>
-      </div>
-    </div>
-  </div>
-
-  <div class="stit">📊 Tariffe Personale per Ruolo</div>
-  <div class="ch-wrap"><h4>Costo orario €/h per figura professionale</h4>
-    <div style="height:260px;position:relative"><canvas id="ch-cu-bar"></canvas></div></div>
-
-  <div class="stit">Impatto sulle Dashboard</div>
-  <div class="g2">
-    <div class="ic" id="cu-impact-trasf"></div>
-    <div class="ic" id="cu-impact-imb"></div>
-  </div>
-  <div class="pf"><span>PRISMA · Parametri Master</span><span>Propagazione in tempo reale</span></div>
-</div>
-
-</div><!-- /main -->
-
-<script>
-// ═══════════════════════════════════════════════════
-// DATI STATICI (da file Excel PRISMA.xlsx)
-// ═══════════════════════════════════════════════════
-const SCARICO = {
-  'Rinfusa':          { kw:6.95,  add:1, portata:20000 },
-  'Bins+Coccodrillo': { kw:24.6,  add:2, portata:10000 },
-  'Bins+Magnoni':     { kw:6.64,  add:1, portata:5000  }
-};
-const LINEE_PREP = {
-  'A':{ kw:3.14, add:1, portata:7000 },
-  'B':{ kw:3.14, add:1, portata:7000 },
-  'C':{ kw:3.14, add:1, portata:7000 },
-  'D':{ kw:5.1,  add:1, portata:7000 }
-};
-const LINEE_TRASF = {
-  'B/SF':        { kw:114.4, add:2, portata:7000,  cent:'2pr+1 sec', ckw:55,   cadd:0 },
-  'BOE+1100':    { kw:80,    add:2, portata:6000,  cent:'1pr+1sec',  ckw:23.5, cadd:0 },
-  'BOE+POLY':    { kw:80,    add:2, portata:6000,  cent:'1pr+1sec',  ckw:23.5, cadd:0 },
-  'BOE+POLY GOE':{ kw:80,    add:2, portata:5000,  cent:'1pr+1sec',  ckw:23.5, cadd:0 },
-  'GOE EST+POLY':{ kw:70,    add:2, portata:5000,  cent:'1pr+1sec',  ckw:23.5, cadd:0 },
-  'GOE EST+400': { kw:65,    add:2, portata:5000,  cent:'1pr+1sec',  ckw:23.5, cadd:0 },
-  'GOE INT+POLY':{ kw:70,    add:2, portata:5000,  cent:'1pr+1sec',  ckw:23.5, cadd:0 },
-  'TORCHI FASO': { kw:90,    add:3, portata:4000,  cent:'3pr+1sec',  ckw:72,   cadd:0 },
-  '400':         { kw:50,    add:1, portata:6000,  cent:'—',         ckw:0,    cadd:0 }
-};
-const RAFF_SUCCO  = { kw:19.2, portata:2240 };
-const RAFF_TORCH  = { kw:11,   portata:700  };
-
-const PROC_DEF = [
-  { id:'disol', nome:'Disoleazione (Santoro/Joe)', portata:1200, kw:24.752, add:1, addKey:'cu-pdi', resa:0.999, pFissa:500,  vap:true,  vapKgH:375,  sel:'Distill. Pilato' },
-  { id:'chiar', nome:'Chiarificazione',            portata:5000, kw:26.5,   add:1, addKey:'cu-pch', resa:0.92,  pFissa:0,    vap:false, vapKgH:0,    sel:'SA-100' },
-  { id:'past',  nome:'Pastorizzazione',            portata:3000, kw:29.87,  add:1, addKey:'cu-ppa', resa:0.999, pFissa:200,  vap:true,  vapKgH:500,  sel:'3000 lt/h' },
-  { id:'dpad',  nome:'Disoleazione Padovan',       portata:5000, kw:25,     add:1, addKey:'cu-pdi', resa:0.997, pFissa:300,  vap:false, vapKgH:0,    sel:'FZ cisterna' },
-  { id:'micro', nome:'Microfiltrazione',           portata:5000, kw:40,     add:1, addKey:'cu-pmi', resa:0.998, pFissa:2500, vap:false, vapKgH:0,    sel:'—' },
-  { id:'conc',  nome:'Concentrazione',             portata:4200, kw:80,     add:1, addKey:'cu-pco', resa:0.16,  pFissa:300,  vap:true,  vapKgH:800,  sel:'BX 50' },
-  { id:'stocc', nome:'Stoccaggio serbatoio',       portata:5000, kw:0,      add:0, addKey:'cu-pma', resa:1.0,   pFissa:0,    vap:false, vapKgH:0,    sel:'Serb. Azz' },
-  { id:'conf',  nome:'Confezionamento',            portata:3000, kw:22,     add:2, addKey:'cu-pcf', resa:0.999, pFissa:100,  vap:false, vapKgH:0,    sel:'Galdi' },
-  { id:'scell', nome:'Stoccaggio in cella',        portata:5000, kw:0,      add:0, addKey:'cu-pma', resa:1.0,   pFissa:0,    vap:false, vapKgH:0,    sel:'Serb. Azz' },
-  { id:'cist',  nome:'Carico cisterna',            portata:10000,kw:7.5,    add:1, addKey:'cu-pma', resa:1.0,   pFissa:0,    vap:false, vapKgH:0,    sel:'Serb. Azz' }
-];
-let procStato = { disol:true, chiar:false, past:false, dpad:false, micro:false, conc:false, stocc:false, conf:false, scell:false, cist:false };
-
-const PKG_DATA = {
-  acma:    { nome:'Buste 500gr Surg.', imp:'ACMA',    peso:0.5,  comp:[{n:'Bustina 500gr',     q:1,       k:'cu-busta500'},{n:'Cartone 24 buste', q:0.0417,  k:'cu-cart500'},{n:'Pedana 80x120 us.',q:0.00208,k:'cu-pedus'}] },
-  rex:     { nome:'Rex 500gr brick',   imp:'Galdi',   peso:0.5,  comp:[{n:'REX 500gr Limone',  q:1,       k:'cu-rex'},     {n:'Cartone Rex Lim.',  q:0.05,    k:'cu-cart500'},{n:'Pedana 80x120 us.',q:0.00208,k:'cu-pedus'}] },
-  goglio:  { nome:'Buste Goglio 3kg',  imp:'Goglio',  peso:3,    comp:[{n:'Busta Goglio 3kg',  q:1,       k:'cu-gog'},     {n:'Cartone Goglio',    q:0.25,    k:'cu-cgog'},   {n:'Pedana 80x120 us.',q:0.00694,k:'cu-pedus'}] },
-  vasch:   { nome:'Vaschette 14kg',    imp:'Magnoni', peso:14,   comp:[{n:'Vaschetta 14kg',    q:1,       k:'cu-vasch'},   {n:'Coperchio vasch.',  q:1,       k:'cu-cop'},    {n:'Pedana us. gen.',  q:0.04,   k:'cu-pedus'}] },
-  latte:   { nome:'Latte 20kg',        imp:'Magnoni', peso:20,   comp:[{n:'Latta 20kg',        q:1,       k:'cu-latta'},   {n:'Sacch. blu picco.',q:1,       k:'cu-sblu'},   {n:'Pedana us. gen.',  q:0.025,  k:'cu-pedus'}] },
-  fbl:     { nome:'Fusti FBL 170kg',   imp:'Magnoni', peso:170,  comp:[{n:'FBL usato',         q:1,       k:'cu-fbl'},     {n:'Sacch. PET blu',   q:2,       k:'cu-pet'},    {n:'Stretch foil kg',  q:0.045,  k:'cu-str'},    {n:'Pedana 100x120 us.',q:0.25,k:'cu-pedus'}] },
-  ff190:   { nome:'F.F. 190kg Provv.', imp:'Magnoni', peso:190,  comp:[{n:'Fusto ferro usato', q:1,       k:'cu-fusto'},   {n:'Sacch. PET blu',   q:2,       k:'cu-pet'},    {n:'Stretch foil kg',  q:0.045,  k:'cu-str'},    {n:'Pedana 100x120 us.',q:0.25,k:'cu-pedus'}] },
-  ff190std:{ nome:'F.F. Std 190kg',    imp:'Magnoni', peso:190,  comp:[{n:'Fusto ferro usato', q:1,       k:'cu-fusto'},   {n:'Sacch. PET blu',   q:2,       k:'cu-pet'},    {n:'Stretch foil kg',  q:0.045,  k:'cu-str'},    {n:'Pedana 120x120 nu.',q:0.25,k:'cu-ped120'}] }
-};
-
-// ═══════════════════════════════════════════════════
-// UTILS
-// ═══════════════════════════════════════════════════
-const fmt = (n,d=2) => (isNaN(n)||n===null) ? '—' : n.toLocaleString('it-IT',{minimumFractionDigits:d,maximumFractionDigits:d});
-const fmtK = n => Math.round(n).toLocaleString('it-IT');
-const fmtE = (n,d=2) => fmt(n,d)+' €';
-const gv  = id => parseFloat(document.getElementById(id)?.value) || 0;
-const gs  = id => document.getElementById(id)?.value || '';
-const set = (id,v) => { const el=document.getElementById(id); if(el) el.innerHTML=v; };
-const CU  = id => parseFloat(document.getElementById(id)?.value) || 0;
-
-// ═══════════════════════════════════════════════════
-// CHART INSTANCES REGISTRY
-// ═══════════════════════════════════════════════════
-const CH = {};
-Chart.defaults.color = '#6a7290';
-Chart.defaults.font.family = "'DM Sans',sans-serif";
-Chart.defaults.font.size = 11;
-
-const GRID = { color:'rgba(46,52,72,0.8)', drawBorder:false };
-const TIP  = { backgroundColor:'#1e2230', borderColor:'#3a4060', borderWidth:1, titleColor:'#e8eaf2', bodyColor:'#a0a8c0', padding:10 };
-const COLS = ['rgba(232,164,74,.85)','rgba(91,156,246,.85)','rgba(78,203,140,.85)','rgba(242,112,112,.85)','rgba(106,114,144,.6)','rgba(192,120,32,.85)'];
-
-function mkChart(id, type, data, opts){
-  if(CH[id]){ try{ CH[id].destroy(); }catch(e){} }
-  const canvas = document.getElementById(id);
-  if(!canvas) return;
-  CH[id] = new Chart(canvas.getContext('2d'), {type, data, options: opts});
-}
-
-function barOpts(yLabel='€', horiz=false){
-  return {
-    responsive:true, maintainAspectRatio:false,
-    plugins:{ legend:{display:false}, tooltip:TIP },
-    scales:{
-      x:{ grid: horiz?GRID:{display:false}, ticks:{color:'#6a7290', maxRotation: horiz?0:35} },
-      y:{ grid: horiz?{display:false}:GRID, ticks:{color:'#6a7290', callback:v=>typeof v==='number'?v.toLocaleString('it-IT',{minimumFractionDigits:0}):v} }
-    },
-    indexAxis: horiz?'y':'x'
-  };
-}
-
-function donutOpts(){
-  return {
-    responsive:true, maintainAspectRatio:false, cutout:'60%',
-    plugins:{
-      legend:{ position:'right', labels:{color:'#a0a8c0', padding:10, font:{size:10}, boxWidth:11} },
-      tooltip:{ ...TIP, callbacks:{ label:ctx=>` ${ctx.label}: ${ctx.parsed.toLocaleString('it-IT',{minimumFractionDigits:2,maximumFractionDigits:2})} €` } }
-    }
-  };
-}
-
-// ═══════════════════════════════════════════════════
-// CALCOLO TRASFORMAZIONE + GRAFICI
-// ═══════════════════════════════════════════════════
-function calcTrasf(){
-  const kwh   = CU('cu-kwh');
-  const kg    = gv('t-kg') || 100000;
-  const scar  = SCARICO[gs('t-scarico')] || SCARICO['Bins+Magnoni'];
-  const lprep = LINEE_PREP[gs('t-linea-prep')] || LINEE_PREP['D'];
-  const ltrasf= LINEE_TRASF[gs('t-linea-trasf')] || LINEE_TRASF['B/SF'];
-  const addKey= gs('t-linea-prep')==='D' ? 'cu-p4' : 'cu-p3';
-
-  // ── Ore ──
-  const ore3 = kg / scar.portata;
-  const ore4 = kg / lprep.portata;
-  const ore5 = kg / ltrasf.portata;
-  const resaSucco  = (gv('t-resa-succo') || 32) / 100;
-  const resaTorch  = (gv('t-resa-torch') || 10) / 100;
-  const resaScorze = (gv('t-resa-scorze')|| 58) / 100;
-  const kgSucco  = kg * resaSucco;
-  const kgTorch  = kg * resaTorch;
-  const kgScorze = kg * resaScorze;
-  const kgScarti = kg * 0.0009;
-  const ore7 = kgSucco / RAFF_SUCCO.portata;
-  const ore8 = kgTorch / RAFF_TORCH.portata;
-
-  // ── Costi ──
-  const cH3   = scar.kw*kwh + scar.add*CU('cu-p3');
-  const cH4   = lprep.kw*kwh + lprep.add*CU(addKey);
-  const cH5   = ltrasf.kw*kwh + ltrasf.add*CU('cu-p5');
-  const cH6   = ltrasf.ckw*kwh + ltrasf.cadd*CU('cu-p6');
-  const cH7   = RAFF_SUCCO.kw*kwh;
-  const cH8   = RAFF_TORCH.kw*kwh;
-  const cTot3 = cH3*ore3, cTot4=cH4*ore4, cTot5=cH5*ore5;
-  const cTot6 = cH6*ore5, cTot7=cH7*ore7, cTot8=cH8*ore8;
-  const cManut = gv('t-manut') || 0;
-  const cDiretto = cTot3+cTot4+cTot5+cTot6+cTot7+cTot8;
-
-  // Pers / En breakdown
-  const cPers = scar.add*CU('cu-p3')*ore3 + lprep.add*CU(addKey)*ore4 + ltrasf.add*CU('cu-p5')*ore5;
-  const cEn   = cDiretto - cPers;
-
-  // Indiretti
-  const ore_ind = kg / 5000;
-  const cH_acq = CU('cu-p1') + 2*kwh;
-  const cH_ric = CU('cu-p2') + 2*kwh;
-  const cTot_acq = cH_acq * ore_ind;
-  const cTot_ric = cH_ric * ore_ind;
-
-  // Ricavi
-  const pSucco  = gv('t-prezzo-succo') || 1.2525;
-  const pTorch  = gv('t-prezzo-torch') || 0.30;
-  const pScorze = gv('t-prezzo-scorze')|| 0.006;
-  const smaltTon= gv('t-smalt') || 180;
-  const ricSucco  = kgSucco * pSucco;
-  const ricTorch  = kgTorch * pTorch;
-  const ricScorze = kgScorze * pScorze;
-  const costoSmalt = kgScarti * smaltTon / 1000;
-  const ricSottoprod = ricTorch + ricScorze;
-  const costoNetto = cDiretto - ricSottoprod + costoSmalt;
-  const costoNettoKg = kgSucco > 0 ? costoNetto/kgSucco : 0;
-  const costoNettoLt = costoNettoKg / 1.05;
-  const margine = ricSucco - costoNetto;
-
-  // ── Badge ──
-  document.getElementById('t-kg-badge').textContent = fmtK(kg)+' kg';
-  document.getElementById('tb-kg').textContent      = '✓ '+fmtK(kg)+' kg';
-  document.getElementById('tb-agrume').textContent  = '🍊 '+gs('t-agrume');
-
-  // ── KPI ──
-  set('k-ctot',    fmt(cDiretto+cManut,0)+'<span class="ku"> €</span>');
-  set('k-ctot-s',  fmt(cDiretto/kg,5)+' €/kg frutta');
-  set('k-ricavo',  fmt(ricSucco,0)+'<span class="ku"> €</span>');
-  set('k-ricavo-s',fmtK(kgSucco)+' kg × '+fmt(pSucco,4)+' €/kg');
-  set('k-margine', fmt(margine,0)+'<span class="ku"> €</span>');
-  set('k-margine-s',fmt(margine/kgSucco,4)+' €/kg succo');
-  set('k-netto',   fmt(costoNettoLt,5)+'<span class="ku"> €/lt</span>');
-  set('k-netto-s', costoNetto<=0?'✓ Costo netto negativo':'Costo netto sul succo');
-
-  // ── HIGHLIGHT ──
-  if(ricSottoprod >= cDiretto){
-    set('hl-title','I ricavi da sottoprodotti coprono interamente il costo di trasformazione');
-    set('hl-body',`Sottoprod.: ${fmtE(ricSottoprod,0)} · Costo diretto: ${fmtE(cDiretto,0)} · Costo netto: ${fmtE(costoNetto,2)}`);
-  } else {
-    set('hl-title','Costo netto sul succo: '+fmtE(costoNetto,2));
-    set('hl-body',`Costo diretto: ${fmtE(cDiretto,0)} · Ricavi sottoprod.: ${fmtE(ricSottoprod,0)} · Margine lordo: ${fmtE(margine,0)}`);
-  }
-
-  // ── TABELLA FASI ──
-  const fasi = [
-    {n:'3. Scarico frutta',          opt:gs('t-scarico'),            kw:scar.kw,          ore:ore3, ch:cH3, tot:cTot3},
-    {n:'4. Preparazione frutta',     opt:'Linea '+gs('t-linea-prep'), kw:lprep.kw,         ore:ore4, ch:cH4, tot:cTot4},
-    {n:'5. Linea trasformazione',    opt:gs('t-linea-trasf'),        kw:ltrasf.kw,         ore:ore5, ch:cH5, tot:cTot5},
-    {n:'6. Centrifugazione olio',    opt:ltrasf.cent,                kw:ltrasf.ckw,        ore:ore5, ch:cH6, tot:cTot6},
-    {n:'7. Raff. stoccaggio succo',  opt:'Chiller+Serb.',            kw:RAFF_SUCCO.kw,     ore:ore7, ch:cH7, tot:cTot7},
-    {n:'8. Raff. stoccaggio torch.', opt:'Chiller+Serb.',            kw:RAFF_TORCH.kw,     ore:ore8, ch:cH8, tot:cTot8},
-  ];
-  let html = fasi.map(f=>`<tr>
-    <td class="lc">${f.n}</td>
-    <td><span class="tag y">${f.opt}</span></td>
-    <td class="n">${fmt(f.kw,2)}</td>
-    <td class="n">${fmt(f.ore,2)}</td>
-    <td class="n">${fmt(f.ch,2)}</td>
-    <td class="n av">${fmt(f.tot,2)}</td></tr>`).join('');
-  html += `<tr style="background:var(--bg3)"><td class="lc" colspan="5"><strong>TOTALE FASI DIRETTE</strong></td>
-    <td class="n av" style="font-size:15px"><strong>${fmt(cDiretto,2)}</strong></td></tr>`;
-  html += `<tr><td class="sl" colspan="5">di cui personale</td><td class="n">${fmt(cPers,2)}</td></tr>`;
-  html += `<tr><td class="sl" colspan="5">di cui energia</td><td class="n">${fmt(cEn,2)}</td></tr>`;
-  set('t-fasi-tbody', html);
-
-  // ── INDIRETTE ──
-  set('ti-acq-h', fmt(cH_acq,2));  set('ti-acq', fmt(cTot_acq,2)+' €');
-  set('ti-ric-h', fmt(cH_ric,2));  set('ti-ric', fmt(cTot_ric,2)+' €');
-  set('ti-tot',   fmt(cTot_acq+cTot_ric,2)+' €');
-
-  // ── PROGRESS ──
-  const fv = [cTot5,cTot4,cTot3,cTot6,cTot7+cTot8];
-  const fn = ['Linea Trasf.','Preparazione','Scarico','Centrifugazione','Raffreddamento'];
-  const fc = ['fa','fb','fg','fr','fd2'];
-  set('prog-box', fn.map((n,i)=>{
-    const p = cDiretto>0 ? fv[i]/cDiretto*100 : 0;
-    return `<div class="pr"><div class="prh"><span class="prl">${n}</span><span class="prv">${fmt(fv[i],0)} € · ${fmt(p,1)}%</span></div>
-      <div class="prb"><div class="prf ${fc[i]}" style="width:${p}%"></div></div></div>`;
-  }).join(''));
-
-  // ── RESE ──
-  const rese=[
-    {ico:'🍋',n:'Succo',r:resaSucco*100,kg:kgSucco,p:pSucco,ric:ricSucco,c:'gv'},
-    {ico:'🥤',n:'Torchiato',r:resaTorch*100,kg:kgTorch,p:pTorch,ric:ricTorch,c:'gv'},
-    {ico:'🟡',n:'Scorze',r:resaScorze*100,kg:kgScorze,p:pScorze,ric:ricScorze,c:'gv'},
-    {ico:'🗑️',n:'Scarti solidi',r:0.09,kg:kgScarti,p:'—',ric:-costoSmalt,c:'rv'},
-  ];
-  set('t-rese-tbody', rese.map(r=>`<tr>
-    <td class="lc">${r.ico} ${r.n}</td>
-    <td class="n">${fmt(r.r,2)}%</td>
-    <td class="n">${fmtK(r.kg)}</td>
-    <td class="n">${typeof r.p==='number'?fmt(r.p,4):'—'}</td>
-    <td class="n ${r.c}">${fmt(r.ric,0)}</td></tr>`).join(''));
-
-  // ── RIEPILOGO ──
-  set('riep-box',`
-    <div class="ir"><span class="ik">Costo totale trasformazione</span><span class="iv">${fmtE(cDiretto,2)}</span></div>
-    <div class="ir"><span class="ik">di cui personale</span><span class="iv">${fmtE(cPers,2)}</span></div>
-    <div class="ir"><span class="ik">di cui energia</span><span class="iv">${fmtE(cEn,2)}</span></div>
-    <div class="ir"><span class="ik">Ricavi sottoprodotti</span><span class="iv g">${fmtE(ricSottoprod,2)}</span></div>
-    <div class="ir"><span class="ik">Costo smaltimento scarti</span><span class="iv r">${fmtE(costoSmalt,2)}</span></div>
-    <div class="ir sep"><span class="ik" style="font-weight:700;color:var(--txt)">★ COSTO NETTO SUL SUCCO</span><span class="iv ${costoNetto<=0?'g':'r'}">${fmtE(costoNetto,2)}</span></div>
-    <div class="ir"><span class="ik">★ €/kg succo</span><span class="iv ${costoNettoKg<=0?'g':'r'}">${fmt(costoNettoKg,5)} €/kg</span></div>
-    <div class="ir"><span class="ik">★ €/lt succo</span><span class="iv ${costoNettoLt<=0?'g':'r'}">${fmt(costoNettoLt,5)} €/lt</span></div>
-    <div class="ir"><span class="ik">Ricavo succo</span><span class="iv">${fmtE(ricSucco,2)}</span></div>
-    <div class="ir sep2"><span class="ik" style="font-weight:700;color:var(--acc)">★★ MARGINE LORDO</span><span class="iv a">${fmtE(margine,2)}</span></div>
-    <div class="ir"><span class="ik">Manutenzione</span><span class="iv">${fmtE(cManut,2)}</span></div>
-    <div class="ir"><span class="ik">Costo totale sessione</span><span class="iv a">${fmtE(cDiretto+cManut,2)}</span></div>
-  `);
-
-  // ── IMPATTO SU CU ──
-  set('cu-impact-trasf',`
-    <h4>⚙️ Impatto su Trasformazione</h4>
-    <div class="ir"><span class="ik">Costo totale diretto</span><span class="iv a">${fmtE(cDiretto,2)}</span></div>
-    <div class="ir"><span class="ik">Costo netto €/lt succo</span><span class="iv ${costoNettoLt<=0?'g':'r'}">${fmt(costoNettoLt,5)} €/lt</span></div>
-    <div class="ir"><span class="ik">Margine lordo succo</span><span class="iv g">${fmtE(margine,2)}</span></div>
-  `);
-
-  // ── GRAFICI TRASF ──
-  mkChart('ch-t-donut','doughnut',{
-    labels:['Linea Trasf.','Preparazione','Scarico','Centrifugazione','Raffreddamento'],
-    datasets:[{ data:[cTot5,cTot4,cTot3,cTot6,cTot7+cTot8],
-      backgroundColor:COLS, borderColor:'#1e2230', borderWidth:2, hoverOffset:6 }]
-  }, donutOpts());
-
-  mkChart('ch-t-bar','bar',{
-    labels:['Scarico','Prep.','Linea','Centrif.','Raff.S','Raff.T'],
-    datasets:[{ data:[cTot3,cTot4,cTot5,cTot6,cTot7,cTot8],
-      backgroundColor:['rgba(78,203,140,.8)','rgba(91,156,246,.8)','rgba(232,164,74,.8)','rgba(242,112,112,.8)','rgba(106,114,144,.5)','rgba(106,114,144,.5)'],
-      borderRadius:6, borderSkipped:false }]
-  }, barOpts('€'));
-
-  mkChart('ch-t-wfall','bar',{
-    labels:['Costo Dir.','Ricavo Succo','Sottoprod.','Smalt.','Margine'],
-    datasets:[{ data:[cDiretto, ricSucco, ricSottoprod, costoSmalt, Math.abs(margine)],
-      backgroundColor:[COLS[3],COLS[2],COLS[2],COLS[0],margine>=0?COLS[2]:COLS[3]],
-      borderRadius:6, borderSkipped:false }]
-  }, barOpts('€'));
-}
-
-// ═══════════════════════════════════════════════════
-// CALCOLO PROCESSI + GRAFICI
-// ═══════════════════════════════════════════════════
-function buildProcTable(){
-  let html='';
-  PROC_DEF.forEach(p=>{
-    const on = procStato[p.id];
-    html+=`<tr id="ptr-${p.id}" style="${on?'':'opacity:.45'}">
-      <td><label class="sw"><input type="checkbox" id="psw-${p.id}" ${on?'checked':''} onchange="toggleProc('${p.id}')"><span class="sl2"></span></label></td>
-      <td class="lc">${p.nome}</td>
-      <td class="n" id="pv-${p.id}">—</td>
-      <td class="n">${fmtK(p.portata)} lt/h</td>
-      <td class="n" id="po-${p.id}">—</td>
-      <td class="n">${fmt(p.kw,2)}</td>
-      <td class="n" id="pen-${p.id}">—</td>
-      <td class="n" id="pvap-${p.id}">—</td>
-      <td class="n" id="ppe-${p.id}">—</td>
-      <td class="n av" id="ptot-${p.id}">—</td>
-      <td class="n av" id="pelt-${p.id}">—</td>
-      <td style="font-size:11px;color:var(--txt3)">${p.sel}</td>
-    </tr>`;
-  });
-  set('proc-tbody', html);
-}
-
-function toggleProc(id){
-  procStato[id] = !!document.getElementById('psw-'+id)?.checked;
-  const row = document.getElementById('ptr-'+id);
-  if(row) row.style.opacity = procStato[id] ? '1' : '0.45';
-  calcProc();
-}
-
-function calcProc(){
-  const kwh = CU('cu-kwh');
-  const vap = CU('cu-vap');
-  const volBase = gv('p-vol') || 32000;
-  set('pk-vol', fmtK(volBase)+'<span class="ku">lt</span>');
-  set('p-vol-badge', fmtK(volBase)+' lt');
-  set('proc-vol-ref','Rif.: '+fmtK(volBase)+' lt');
-
-  let volC = volBase, cTotProc=0, cEn=0, cVapTot=0, cPers=0;
-  const cascata = [];
-
-  PROC_DEF.forEach(p=>{
-    const on = procStato[p.id];
-    const cAddH = CU(p.addKey);
-    if(on && volC > 0){
-      const ore = volC / p.portata;
-      const cE = p.kw * kwh * ore;
-      const cV = p.vap ? vap * p.vapKgH * ore : 0;
-      const cP = p.add * cAddH * ore;
-      const cT = cE + cV + cP;
-      const perd = p.pFissa + volC*(1-p.resa);
-      const vOut = Math.max(0, volC-perd);
-      set('pv-'+p.id, fmtK(volC));
-      set('po-'+p.id, fmt(ore,2));
-      set('pen-'+p.id, fmt(cE,2));
-      set('pvap-'+p.id, p.vap ? fmt(cV,2) : '—');
-      set('ppe-'+p.id, fmt(cP,2));
-      set('ptot-'+p.id, fmt(cT,2));
-      set('pelt-'+p.id, fmt(cT/volBase,5));
-      cTotProc+=cT; cEn+=cE; cVapTot+=cV; cPers+=cP;
-      cascata.push({nome:p.nome,on:true,vIn:volC,perd,vOut,resa:vOut/volC*100,cT});
-      volC = vOut;
-    } else {
-      set('pv-'+p.id,'—'); set('po-'+p.id,'—');
-      set('pen-'+p.id,'0'); set('pvap-'+p.id,'—');
-      set('ppe-'+p.id,'0'); set('ptot-'+p.id,'0'); set('pelt-'+p.id,'0');
-      cascata.push({nome:p.nome,on:false,vIn:0,perd:0,vOut:0,resa:0,cT:0});
-    }
-  });
-
-  const resaFil = volBase>0 ? volC/volBase*100 : 0;
-
-  set('pk-ctot', fmt(cTotProc,2)+'<span class="ku"> €</span>');
-  set('pk-ctot-s', fmt(volBase>0?cTotProc/volBase:0,5)+' €/lt');
-  set('pk-fil',   fmt(volBase>0?cTotProc/volBase:0,5)+'<span class="ku"> €/lt</span>');
-  set('pk-resa',  fmt(resaFil,2)+'<span class="ku"> %</span>');
-  set('pk-resa-s', fmtK(volC)+' lt uscita finale');
-
-  set('proc-riep-box',`
-    <div class="ir"><span class="ik">Costo energia totale</span><span class="iv b">${fmtE(cEn,2)}</span></div>
-    <div class="ir"><span class="ik">Costo vapore totale</span><span class="iv g">${fmtE(cVapTot,2)}</span></div>
-    <div class="ir"><span class="ik">Costo personale totale</span><span class="iv">${fmtE(cPers,2)}</span></div>
-    <div class="ir sep"><span class="ik" style="font-weight:700;color:var(--txt)">★ TOTALE PROCESSI</span><span class="iv a">${fmtE(cTotProc,2)}</span></div>
-    <div class="ir"><span class="ik">Costo €/lt ingresso</span><span class="iv a">${fmt(volBase>0?cTotProc/volBase:0,5)} €/lt</span></div>
-    <div class="ir"><span class="ik">Volume uscita finale</span><span class="iv g">${fmtK(volC)} lt</span></div>
-    <div class="ir"><span class="ik">Resa totale filiera</span><span class="iv g">${fmt(resaFil,2)}%</span></div>
-  `);
-
-  let cascHTML=`<div class="ir"><span class="ik">Volume ingresso</span><span class="iv">${fmtK(volBase)} lt</span></div>`;
-  cascata.filter(c=>c.on).forEach(c=>{
-    cascHTML+=`<div class="ir"><span class="ik">${c.nome} → uscita</span><span class="iv g">${fmtK(c.vOut)} lt</span></div>
-      <div class="ir"><span class="ik">Perdita</span><span class="iv r">${fmt(c.perd,1)} lt</span></div>
-      <div class="ir"><span class="ik">Resa processo</span><span class="iv g">${fmt(c.resa,2)}%</span></div>`;
-  });
-  cascHTML+=`<div class="ir sep2"><span class="ik" style="font-weight:700;color:var(--acc)">RESA TOTALE FILIERA</span><span class="iv a">${fmt(resaFil,2)}%</span></div>`;
-  set('proc-cascata-box', cascHTML);
-
-  const pkgMap = {
-    'Limone':'ACMA, Goglio, Galdi (Rex), Magnoni (Latte, Vaschette, FBL, F.F.), Cisterne',
-    'Mandarino':'Galdi, Magnoni (Vaschette, Latte, F.F.), FBL, Cisterne',
-    'Arancia':'Galdi (Rex), Magnoni (F.F. Standard), 400, Cisterne',
-    'Bergamotto':'Magnoni (F.F. NAT), GOE EST+400, BOE+1100, Cisterne'
-  };
-  set('proc-pkg-note',`<strong>📌 Packaging compatibile ${gs('p-agrume')}:</strong> ${pkgMap[gs('p-agrume')]||'—'}`);
-
-  // ── GRAFICI PROCESSI ──
-  const att = cascata.filter(c=>c.on && c.cT>0);
-  mkChart('ch-p-bar','bar',{
-    labels: att.length ? att.map(c=>c.nome.split('(')[0].trim().substring(0,13)) : ['Nessun processo'],
-    datasets:[{ data: att.length ? att.map(c=>+c.cT.toFixed(2)) : [0],
-      backgroundColor: att.length ? att.map((_,i)=>COLS[i%COLS.length]) : ['rgba(106,114,144,.5)'],
-      borderRadius:6, borderSkipped:false }]
-  }, barOpts('€'));
-
-  const attC = cascata.filter(c=>c.on);
-  mkChart('ch-p-cascata','bar',{
-    labels: attC.length ? attC.map(c=>c.nome.split('(')[0].trim().substring(0,12)) : ['Ingresso'],
-    datasets:[
-      { label:'Entrata (lt)', data: attC.length?attC.map(c=>+c.vIn.toFixed(0)):[volBase],
-        backgroundColor:'rgba(91,156,246,.3)', borderColor:'rgba(91,156,246,.8)', borderWidth:1.5, borderRadius:4 },
-      { label:'Uscita (lt)',  data: attC.length?attC.map(c=>+c.vOut.toFixed(0)):[volBase],
-        backgroundColor:'rgba(78,203,140,.3)', borderColor:'rgba(78,203,140,.8)', borderWidth:1.5, borderRadius:4 }
-    ]
-  },{
-    responsive:true, maintainAspectRatio:false,
-    plugins:{ legend:{display:true,labels:{color:'#a0a8c0',padding:10,font:{size:11},boxWidth:11}}, tooltip:TIP },
-    scales:{ x:{grid:{display:false},ticks:{color:'#6a7290'}}, y:{grid:GRID,ticks:{color:'#6a7290'}} }
-  });
-}
-
-// ═══════════════════════════════════════════════════
-// CALCOLO IMBALLAGGI + GRAFICI
-// ═══════════════════════════════════════════════════
-function getPkgCosto(k){
-  return (PKG_DATA[k]?.comp||[]).reduce((s,c)=>s+c.q*(CU(c.k)||0), 0);
-}
-
-function calcImb(){
-  const selKey = gs('i-pkg') || 'ff190';
-  const pkg = PKG_DATA[selKey];
-  if(!pkg) return;
-
-  const allCosts = {};
-  Object.keys(PKG_DATA).forEach(k=>{
-    const c=getPkgCosto(k);
-    allCosts[k]={costo:c, ck: c/PKG_DATA[k].peso};
-  });
-
-  const sel = allCosts[selKey];
-  const entries = Object.entries(allCosts);
-  const minE = entries.reduce((a,b)=>a[1].ck<b[1].ck?a:b);
-  const maxE = entries.reduce((a,b)=>a[1].ck>b[1].ck?a:b);
-
-  set('ik-unita', fmt(sel.costo,3)+'<span class="ku"> €/unità</span>');
-  set('ik-unita-s', pkg.nome+' · '+pkg.peso+' kg netti');
-  set('ik-kg',    fmt(sel.ck,5)+'<span class="ku"> €/kg</span>');
-  set('ik-kg-s',  pkg.peso+' kg netti per unità');
-  set('ik-min',   fmt(minE[1].ck,5)+'<span class="ku"> €/kg</span>');
-  set('ik-min-s', PKG_DATA[minE[0]].nome);
-  set('ik-max',   fmt(maxE[1].ck,5)+'<span class="ku"> €/kg</span>');
-  set('ik-max-s', PKG_DATA[maxE[0]].nome);
-
-  set('imb-det-title', `<span style="width:4px;height:4px;border-radius:50%;background:var(--acc);display:inline-block;margin-right:8px"></span>Componenti — ${pkg.nome}`);
-
-  // Tabella componenti
-  let compHTML=''; let tot=0;
-  const compData = pkg.comp.map(c=>({n:c.n, q:c.q, vu:CU(c.k), val:c.q*(CU(c.k)||0)}));
-  compData.forEach(c=>{ tot+=c.val; });
-  compHTML = compData.map(c=>`<tr>
-    <td class="lc">${c.n}</td>
-    <td class="n">${fmt(c.q,4)}</td>
-    <td class="n">${fmt(c.vu,4)}</td>
-    <td class="n av">${fmt(c.val,4)}</td></tr>`).join('');
-  compHTML+=`<tr style="background:var(--bg3)"><td class="lc" colspan="3"><strong>Costo totale</strong></td>
-    <td class="n av" style="font-size:15px"><strong>${fmt(tot,3)} €</strong></td></tr>`;
-  compHTML+=`<tr style="background:var(--bg3)"><td class="lc" colspan="3"><strong>★ €/kg prodotto</strong></td>
-    <td class="n gv" style="font-size:15px"><strong>${fmt(sel.ck,5)} €/kg</strong></td></tr>`;
-  set('imb-comp-tbody', compHTML);
-  set('imb-note','<strong>ℹ️</strong> Prezzi da Costi Unitari — modificali per aggiornare tutti i formati automaticamente.');
-
-  // Config box
-  set('imb-config-box',`
-    <div class="ir"><span class="ik">Packaging</span><span class="iv a">${pkg.nome}</span></div>
-    <div class="ir"><span class="ik">Impianto</span><span class="iv">${pkg.imp}</span></div>
-    <div class="ir"><span class="ik">Agrume</span><span class="iv">🍊 ${gs('i-agrume')}</span></div>
-    <div class="ir"><span class="ik">Peso netto / unità</span><span class="iv">${pkg.peso} kg</span></div>
-    <div class="ir"><span class="ik">N° componenti</span><span class="iv">${pkg.comp.length}</span></div>
-    <div class="ir"><span class="ik">Costo / unità</span><span class="iv a">${fmt(sel.costo,3)} €</span></div>
-    <div class="ir sep2"><span class="ik" style="font-weight:700;color:var(--txt)">★ €/kg</span><span class="iv g">${fmt(sel.ck,5)}</span></div>
-  `);
-
-  // Progress
-  const maxKg = maxE[1].ck;
-  set('imb-prog-box', entries.map(([k,v])=>{
-    const p = maxKg>0?v.ck/maxKg*100:0;
-    const isSel=k===selKey;
-    const cl = k===maxE[0]?'fr':k===minE[0]?'fg':'fb';
-    return `<div class="pr">
-      <div class="prh"><span class="prl">${PKG_DATA[k].nome}${isSel?' ★':''}</span>
-        <span class="prv" style="${isSel?'color:var(--acc)':''}">${fmt(v.ck,5)} €/kg</span></div>
-      <div class="prb"><div class="prf ${isSel?'fa':cl}" style="width:${p}%"></div></div></div>`;
-  }).join(''));
-
-  // Cards
-  set('imb-cards', entries.map(([k,v])=>{
-    const isSel=k===selKey;
-    const col=k===maxE[0]?'var(--red)':k===minE[0]?'var(--grn)':'var(--acc)';
-    return `<div class="pkc ${isSel?'sel':''}" onclick="document.getElementById('i-pkg').value='${k}';runAll()">
-      <div class="pkn">${PKG_DATA[k].nome}${isSel?' ★':''}</div>
-      <div class="pkw">${PKG_DATA[k].peso} kg · ${PKG_DATA[k].imp}</div>
-      <div class="pkv" style="color:${col}">${fmt(v.ck,5)}<span class="pku"> €/kg</span></div>
-      <div class="pkp">${fmt(v.costo,3)} €/unità</div></div>`;
-  }).join(''));
-
-  // Impatto CU
-  set('cu-impact-imb',`
-    <h4>📦 Impatto su Imballaggi</h4>
-    <div class="ir"><span class="ik">Formato selezionato</span><span class="iv a">${pkg.nome}</span></div>
-    <div class="ir"><span class="ik">Costo €/kg</span><span class="iv g">${fmt(sel.ck,5)} €/kg</span></div>
-    <div class="ir"><span class="ik">Min €/kg</span><span class="iv g">${PKG_DATA[minE[0]].nome}: ${fmt(minE[1].ck,5)}</span></div>
-    <div class="ir"><span class="ik">Max €/kg</span><span class="iv r">${PKG_DATA[maxE[0]].nome}: ${fmt(maxE[1].ck,5)}</span></div>
-  `);
-
-  // ── GRAFICI IMBALLAGGI ──
-  mkChart('ch-i-bar','bar',{
-    labels: entries.map(([k])=>PKG_DATA[k].nome),
-    datasets:[{ data: entries.map(([,v])=>+v.ck.toFixed(5)),
-      backgroundColor: entries.map(([k])=>k===selKey?COLS[0]:k===maxE[0]?COLS[3]:COLS[1]),
-      borderRadius:4, borderSkipped:false }]
-  },{
-    responsive:true, maintainAspectRatio:false, indexAxis:'y',
-    plugins:{ legend:{display:false}, tooltip:{ ...TIP, callbacks:{label:ctx=>' '+ctx.parsed.x.toFixed(5)+' €/kg'} } },
-    scales:{ x:{grid:GRID,ticks:{color:'#6a7290',callback:v=>v.toFixed(3)+'€'}}, y:{grid:{display:false},ticks:{color:'#6a7290',font:{size:10}}} }
-  });
-
-  mkChart('ch-i-donut','doughnut',{
-    labels: compData.map(c=>c.n),
-    datasets:[{ data: compData.map(c=>+c.val.toFixed(4)),
-      backgroundColor:COLS, borderColor:'#1e2230', borderWidth:2, hoverOffset:6 }]
-  }, donutOpts());
-}
-
-// ═══════════════════════════════════════════════════
-// GRAFICO COSTI UNITARI
-// ═══════════════════════════════════════════════════
-function calcCU(){
-  const ruoli = ['Acquisto','Ricezione','Scarico','Prep.','Trasf.','Centrif.','Lavaggio','Chiarif.','Pastorizz.','Disoleaz.','Microfiltr.','Concentr.','Confez.','Manovale'];
-  const keys  = ['cu-p1','cu-p2','cu-p3','cu-p4','cu-p5','cu-p6','cu-p9','cu-pch','cu-ppa','cu-pdi','cu-pmi','cu-pco','cu-pcf','cu-pma'];
-  const vals  = keys.map(k=>CU(k));
-  const maxV  = Math.max(...vals);
-  mkChart('ch-cu-bar','bar',{
-    labels: ruoli,
-    datasets:[{ data: vals,
-      backgroundColor: vals.map(v=>v===maxV?COLS[0]:v<27?COLS[4]:COLS[1]),
-      borderRadius:5, borderSkipped:false }]
-  },{
-    ...barOpts('€/h'),
-    plugins:{ legend:{display:false}, tooltip:{ ...TIP, callbacks:{label:ctx=>' '+ctx.parsed.y+' €/h'} } }
-  });
-}
-
-// ═══════════════════════════════════════════════════
-// NAVIGATION
-// ═══════════════════════════════════════════════════
-const TITLES = { trasf:'Dashboard Trasformazione', proc:'Dashboard Processi', imb:'Dashboard Imballaggi', cu:'Costi Unitari' };
-
-function SP(id){
-  document.querySelectorAll('.pg').forEach(p=>p.classList.remove('act'));
-  document.querySelectorAll('.na').forEach(n=>n.classList.remove('act'));
-  document.getElementById('pg-'+id)?.classList.add('act');
-  document.getElementById('nav-'+id)?.classList.add('act');
-  set('bc',`PRISMA &rsaquo; <span class="cur">${TITLES[id]}</span>`);
-  window.location.hash = id;
-  // Resize charts after page becomes visible
-  setTimeout(()=>Object.values(CH).forEach(c=>{ try{ c.resize(); }catch(e){} }), 80);
-}
-
-// ═══════════════════════════════════════════════════
-// MASTER RECALC — called on every input change
-// ═══════════════════════════════════════════════════
-function runAll(){
-  calcTrasf();
-  calcProc();
-  calcImb();
-  calcCU();
-}
-
-// ═══════════════════════════════════════════════════
-// INIT
-// ═══════════════════════════════════════════════════
-document.addEventListener('DOMContentLoaded', ()=>{
-  buildProcTable();
-  runAll();
-  const hash = window.location.hash.replace('#','');
-  if(hash && TITLES[hash]) SP(hash);
-});
-</script>
+    <script>
+        // Funzione per navigare tra le pagine del menu
+        function switchView(viewId) {
+            // Rimuove 'active' da tutte le sezioni e bottoni
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+            
+            // Attiva la sezione richiesta
+            document.getElementById(viewId).classList.add('active');
+            event.currentTarget.classList.add('active');
+        }
+
+        // Funzione che sostituisce le Formule Excel
+        function calcolaDashboard() {
+            // 1. Lettura dei valori di INPUT (dai vari campi)
+            let volume = parseFloat(document.getElementById('inp-volume').value) || 0;
+            let portata = parseFloat(document.getElementById('inp-portata').value) || 1; // Evita divisione per zero
+            let kw = parseFloat(document.getElementById('inp-kw').value) || 0;
+            
+            let tariffaEn = parseFloat(document.getElementById('inp-tariffa-en').value) || 0;
+            let costoPers = parseFloat(document.getElementById('inp-costo-pers').value) || 0;
+
+            // 2. Calcoli (Esattamente come in Excel)
+            // Ore = Volume / Portata
+            let oreFunzionamento = volume / portata;
+            
+            // Costo Energia per la sessione = (kW * Tariffa) * Ore
+            let costoEnergiaTot = (kw * tariffaEn) * oreFunzionamento;
+            
+            // Costo Personale per la sessione = Costo orario * Ore
+            let costoPersonaleTot = costoPers * oreFunzionamento;
+            
+            // Costo Totale
+            let costoTotale = costoEnergiaTot + costoPersonaleTot;
+
+            // 3. Scrittura dei RISULTATI nello schermo (aggiornamento DOM)
+            document.getElementById('out-ore').innerText = oreFunzionamento.toFixed(2) + " h";
+            document.getElementById('out-costo-totale').innerText = "€ " + costoTotale.toFixed(2);
+        }
+
+        // Esegue il calcolo appena la pagina viene caricata per mostrare i valori di default
+        window.onload = calcolaDashboard;
+    </script>
 </body>
 </html>

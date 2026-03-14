@@ -3,56 +3,77 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PRISMA Web App - Motore Integrato</title>
+    <title>PRISMA Web App - Produzione e Costi</title>
     <style>
-        /* --- STILI CSS --- */
-        :root { --primary: #F26419; --secondary: #33658A; --bg-color: #F4F6F8; --sidebar-bg: #2F4858; --text-light: #FFF; --danger: #D62828; --success: #2ca02c; }
-        body { margin: 0; font-family: 'Segoe UI', Tahoma, sans-serif; background-color: var(--bg-color); display: flex; height: 100vh; overflow: hidden; }
+        /* =========================================
+           STILI CSS (Grafica e Layout)
+           ========================================= */
+        :root { 
+            --primary: #F26419; 
+            --secondary: #33658A; 
+            --bg-color: #F4F6F8; 
+            --sidebar-bg: #2F4858; 
+            --text-light: #FFF; 
+            --danger: #D62828; 
+            --success: #2ca02c; 
+        }
         
-        .sidebar { width: 280px; background-color: var(--sidebar-bg); color: var(--text-light); display: flex; flex-direction: column; flex-shrink: 0; }
+        body { margin: 0; font-family: 'Segoe UI', Tahoma, sans-serif; background-color: var(--bg-color); display: flex; height: 100vh; overflow: hidden; color: #333; }
+        
+        /* Sidebar Navigation */
+        .sidebar { width: 280px; background-color: var(--sidebar-bg); color: var(--text-light); display: flex; flex-direction: column; flex-shrink: 0; z-index: 10; box-shadow: 2px 0 5px rgba(0,0,0,0.1);}
         .sidebar-header { padding: 20px; background-color: var(--primary); font-weight: bold; font-size: 1.2rem; text-align: center; }
         .nav-btn { background: none; border: none; color: var(--text-light); padding: 15px 20px; text-align: left; font-size: 1rem; cursor: pointer; border-left: 4px solid transparent; transition: all 0.2s; border-bottom: 1px solid rgba(255,255,255,0.05);}
         .nav-btn:hover, .nav-btn.active { background-color: rgba(255,255,255,0.1); border-left: 4px solid var(--primary); font-weight: bold;}
 
+        /* Main Content Area */
         .main-content { flex-grow: 1; padding: 30px; overflow-y: auto; }
         .view-section { display: none; animation: fadeIn 0.3s; }
         .view-section.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        .card { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        /* Componenti UI (Card, Grid, Input) */
+        .card { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; border: 1px solid #e1e4e8;}
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         h2 { color: var(--secondary); margin-top: 0; border-bottom: 2px solid var(--bg-color); padding-bottom: 10px; }
         h3 { color: var(--primary); margin-bottom: 15px; font-size: 1.1rem; }
         
-        .input-group { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding: 10px; background: var(--bg-color); border-radius: 5px; }
-        input, select { padding: 8px; border: 1px solid #ccc; border-radius: 4px; width: 160px; text-align: right; font-size: 1rem; }
-        select { width: 100%; text-align: left; }
+        .input-group { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding: 10px; background: var(--bg-color); border-radius: 5px; border-left: 3px solid #ccc; transition: all 0.2s;}
+        .input-group:hover { border-left-color: var(--primary); }
+        .input-group.vertical { flex-direction: column; align-items: flex-start; }
+        .input-group.vertical label { margin-bottom: 5px; font-size: 0.9rem; color: #555;}
         
-        .result-box { background: #eaf4fc; padding: 15px; border-left: 5px solid var(--secondary); font-weight: bold; display: flex; justify-content: space-between; margin-top: 15px; }
+        input, select { padding: 8px; border: 1px solid #ccc; border-radius: 4px; width: 180px; text-align: right; font-size: 1rem; }
+        select { text-align: left; }
+        
+        .result-box { background: #eaf4fc; padding: 15px; border-left: 5px solid var(--secondary); font-weight: bold; display: flex; justify-content: space-between; margin-top: 15px; border-radius: 4px;}
         .result-box.total { background: #33658A; color: white; border-left: 5px solid var(--primary); font-size: 1.2rem; }
         .highlight { color: var(--primary); }
         .total .highlight { color: #FFF; }
-        .badge { background: var(--primary); color: white; padding: 3px 8px; border-radius: 4px; font-size: 0.85rem; }
+        .badge { background: var(--primary); color: white; padding: 3px 8px; border-radius: 4px; font-size: 0.85rem; font-weight: normal;}
         
+        /* Tabelle */
         table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.95rem; }
         th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
         th { background-color: var(--secondary); color: white; }
         td.numero { text-align: right; font-family: monospace; font-size: 1rem;}
 
-        /* Pulsanti Export */
+        /* Pulsanti Azione */
         .btn-export { padding: 10px 20px; font-size: 1rem; font-weight: bold; border: none; border-radius: 5px; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: background 0.3s;}
         .btn-pdf { background-color: #D62828; color: white; }
         .btn-pdf:hover { background-color: #b01e1e; }
         .btn-csv { background-color: #2ca02c; color: white; }
         .btn-csv:hover { background-color: #207a20; }
 
-        /* Stili per la Stampa PDF */
+        /* Ottimizzazione Stampa PDF */
         @media print {
             .sidebar { display: none !important; }
-            .main-content { overflow: visible !important; padding: 0 !important; }
+            .main-content { overflow: visible !important; padding: 0 !important; width: 100%; }
             .btn-export { display: none !important; }
             body { background-color: white; }
-            .card { box-shadow: none; border: 1px solid #ddd; page-break-inside: avoid; }
+            .card { box-shadow: none; border: 1px solid #ddd; page-break-inside: avoid; margin-bottom: 10px;}
+            .view-section { display: block !important; } /* Stampa tutto il documento */
+            #parametri { display: none !important; } /* Nascondi i parametri nella stampa */
         }
     </style>
 </head>
@@ -60,31 +81,51 @@
 
     <div class="sidebar">
         <div class="sidebar-header">🍊 PRISMA Web App</div>
-        <button class="nav-btn active" onclick="switchView('trasformazione')">🏭 1. Trasformazione</button>
-        <button class="nav-btn" onclick="switchView('rese_freddo')">📉 2. Rese, Freddo & Stocc.</button>
-        <button class="nav-btn" onclick="switchView('imballaggi')">📦 3. Confezionamento</button>
-        <button class="nav-btn" onclick="switchView('riepilogo')">📊 4. Grand Total</button>
-        <button class="nav-btn" onclick="switchView('parametri')">⚙️ Costi Unitari Master</button>
+        <button class="nav-btn active" onclick="switchView('fase1_estrazione')">🏭 1. Estrazione & Processi</button>
+        <button class="nav-btn" onclick="switchView('fase2_rese_freddo')">❄️ 2. Rese & Freddo</button>
+        <button class="nav-btn" onclick="switchView('fase3_confezionamento')">📦 3. Confezionamento</button>
+        <button class="nav-btn" onclick="switchView('fase4_grand_total')">📊 4. Grand Total & Export</button>
+        <button class="nav-btn" onclick="switchView('parametri')" style="margin-top: auto;">⚙️ Costi Unitari Master</button>
     </div>
 
     <div class="main-content">
         
-        <div id="trasformazione" class="view-section active">
+        <div id="fase1_estrazione" class="view-section active">
             <div class="card">
-                <h2>🏭 Fase 1: Estrazione Succo Grezzo</h2>
+                <h2>🏭 Fase 1: Inserimento Volumi e Estrazione Base</h2>
                 <div class="grid-2">
-                    <div class="input-group"><label>▶ FRUTTA IN INGRESSO (kg)</label><input type="number" id="inp-kg-frutta" value="100000" oninput="aggiornaTutto()"></div>
-                    <div class="input-group"><label>▶ SUCCO LORDO ESTRATTO (lt)</label><input type="number" id="inp-lt-succo-lordo" value="32000" oninput="aggiornaTutto()"></div>
+                    <div class="input-group">
+                        <label>▶ FRUTTA IN INGRESSO (kg)</label>
+                        <input type="number" id="inp-kg-frutta" value="100000" oninput="aggiornaTutto()">
+                    </div>
+                    <div class="input-group">
+                        <label>▶ SUCCO LORDO ESTRATTO (lt) <span class="badge" title="Volume prima delle perdite termiche">Lordo</span></label>
+                        <input type="number" id="inp-lt-succo-lordo" value="32000" oninput="aggiornaTutto()">
+                    </div>
                 </div>
             </div>
 
             <div class="grid-2">
                 <div class="card">
-                    <h3>Scarico Frutta</h3>
-                    <div class="input-group">
+                    <h3>A. Scarico Frutta</h3>
+                    <div class="input-group vertical">
+                        <label>Tipologia Impianto Scarico:</label>
                         <select id="sel-scarico" onchange="aggiornaTutto()">
-                            <option value="rinfusa">Rinfusa</option><option value="bins_coccodrillo">Bins + Coccodrillo</option><option value="bins_magnoni">Bins + Magnoni</option>
-                       <select id="sel-linea" onchange="aggiornaTutto()">
+                            <option value="rinfusa">Rinfusa</option>
+                            <option value="bins_coccodrillo">Bins + Coccodrillo</option>
+                            <option value="bins_magnoni">Bins + Magnoni</option>
+                        </select>
+                    </div>
+                    <div class="result-box">
+                        <span>Costo Scarico:</span><span id="out-costo-scarico" class="highlight">€ 0.00</span>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>B. Linea Estrazione & Centrifughe</h3>
+                    <div class="input-group vertical">
+                        <label>Seleziona Linea Attiva:</label>
+                        <select id="sel-linea" onchange="aggiornaTutto()">
                             <option value="bsf">Linea B/SF (7000 kg/h)</option>
                             <option value="boe_1100">Linea BOE + 1100 (5000 kg/h)</option>
                             <option value="boe_poly">Linea BOE + POLY (5000 kg/h)</option>
@@ -93,128 +134,219 @@
                             <option value="goe_est_400">Linea GOE EST + 400 (5000 kg/h)</option>
                             <option value="goe_int_poly">Linea GOE INT + POLY (5000 kg/h)</option>
                             <option value="torchi_faso">TORCHI FASO (10000 kg/h)</option>
-                            <option value="linea_400">Linea 400 (5000 kg/h)</option>
-                        </select>                <h3>Processi sul Succo & Lavaggi</h3>
-                <div class="grid-2">
-                    <div class="input-group">
-                        <label>Processo Termico:</label>
-                        <select id="sel-processo" onchange="aggiornaTutto()">
-                            <option value="nessuno">Nessun Processo (Succo Crudo)</option><option value="pastorizzazione">Pastorizzazione Tubolare</option><option value="distillazione_joe">Distillatore Joe</option>
+                            <option value="linea_400">Linea 400 (Solo Succo - 5000 kg/h)</option>
                         </select>
                     </div>
-                    <div class="input-group">
-                        <label>Ore Lavaggio Impianti:</label>
-                        <input type="number" id="inp-ore-lavaggio" value="2" step="0.5" oninput="aggiornaTutto()">
+                    <div class="result-box">
+                        <span>Costo Estrazione:</span><span id="out-costo-estrazione" class="highlight">€ 0.00</span>
                     </div>
                 </div>
             </div>
+
+            <div class="card">
+                <h3>C. Processi sul Succo & Lavaggi Impianto</h3>
+                <div class="grid-2">
+                    <div class="input-group vertical">
+                        <label>Processo Termico / Speciale:</label>
+                        <select id="sel-processo" onchange="aggiornaTutto()">
+                            <option value="nessuno">Nessun Processo (Succo Crudo)</option>
+                            <option value="pastorizzazione">Pastorizzazione Tubolare</option>
+                            <option value="distillazione_joe">Distillatore Joe</option>
+                            <option value="distillazione_santoro">Distillatore Santoro</option>
+                            <option value="distillazione_pilato">Distillatore Pilato</option>
+                            <option value="disoleazione_padovan">Disoleazione Padovan</option>
+                            <option value="microfiltrazione">Microfiltrazione</option>
+                            <option value="chiarificazione">Chiarificazione</option>
+                            <option value="concentrazione">Concentrazione (Evaporatore)</option>
+                        </select>
+                    </div>
+                    <div class="input-group vertical">
+                        <label>Ore Totali Lavaggio Linee (h):</label>
+                        <input type="number" id="inp-ore-lavaggio" value="2.0" step="0.5" style="width: 100%;" oninput="aggiornaTutto()">
+                    </div>
+                </div>
+            </div>
+            
             <div class="result-box total">
-                <span>Totale Costi Diretti Fase 1:</span>
+                <span>TOTALE COSTI DIRETTI FASE 1:</span>
                 <span id="out-tot-fase1" class="highlight">€ 0.00</span>
             </div>
         </div>
 
-        <div id="rese_freddo" class="view-section">
+        <div id="fase2_rese_freddo" class="view-section">
             <div class="grid-2">
                 <div class="card">
                     <h2>📉 Rese a Cascata e Cali Peso</h2>
+                    <p>Il volume si riduce in base al processo termico selezionato.</p>
                     <table>
-                        <thead><tr><th>Fase</th><th>Volume (lt)</th></tr></thead>
+                        <thead><tr><th>Fase di Trasferimento</th><th>Volume (lt)</th></tr></thead>
                         <tbody>
-                            <tr><td>Succo Lordo Iniziale</td><td class="numero" id="out-resa-lordo">32,000.0</td></tr>
-                            <tr style="color:var(--danger);"><td>Perdita Processo Termico <span id="info-perc-perdita" class="badge">0%</span></td><td class="numero" id="out-resa-perdita">- 0.0</td></tr>
-                            <tr style="color:var(--danger);"><td>Perdita Trasferimenti Tubazioni (Fissa 0.5%)</td><td class="numero" id="out-resa-tubi">- 0.0</td></tr>
-                            <tr style="font-weight:bold; background:#f0f8ff;"><td>SUCCO NETTO RESIDUO</td><td class="numero" id="out-resa-netto" style="color:var(--success);">32,000.0</td></tr>
+                            <tr><td>Succo Lordo Iniziale</td><td class="numero" id="out-resa-lordo">0.0</td></tr>
+                            <tr style="color:var(--danger);">
+                                <td>Perdita Processo (<span id="info-perc-perdita">0%</span>)</td>
+                                <td class="numero" id="out-resa-perdita">- 0.0</td>
+                            </tr>
+                            <tr style="color:var(--danger);">
+                                <td>Perdita Tubazioni Trasferimento (0.5%)</td>
+                                <td class="numero" id="out-resa-tubi">- 0.0</td>
+                            </tr>
+                            <tr style="font-weight:bold; background:#e8f5e9;">
+                                <td>SUCCO NETTO DA CONFEZIONARE</td>
+                                <td class="numero" id="out-resa-netto" style="color:var(--success); font-size: 1.1rem;">0.0</td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
 
                 <div class="card">
-                    <h2>❄️ Energia Invisibile (Freddo e Stoccaggio)</h2>
-                    <div class="input-group">
-                        <label>Raffreddamento Succo Pre-Stoccaggio:</label>
-                        <select id="sel-raffreddamento" onchange="aggiornaTutto()">
-                            <option value="nessuno">Nessuno</option><option value="chiller_base">Chiller Scambiatore a Piastre (20 kW)</option><option value="chiller_potente">Chiller Potente (50 kW)</option>
+                    <h2>❄️ Energia Invisibile: Freddo & Cella</h2>
+                    <div class="input-group vertical">
+                        <label>Raffreddamento Succo Pre-Stoccaggio (Chiller):</label>
+                        <select id="sel-raffreddamento" style="width: 100%;" onchange="aggiornaTutto()">
+                            <option value="nessuno">Nessun Raffreddamento (Diretto)</option>
+                            <option value="chiller_base">Chiller Scambiatore a Piastre (20 kW)</option>
+                            <option value="chiller_potente">Chiller Potente (50 kW)</option>
                         </select>
                     </div>
 
                     <div style="border-top:1px solid #eee; margin-top:15px; padding-top:15px;">
-                        <h4 style="margin: 0 0 10px 0; color:var(--secondary);">Stoccaggio in Cella Frigorifera</h4>
-                        <div class="input-group"><label>Giorni di Stoccaggio in Cella:</label><input type="number" id="inp-giorni-cella" value="0" oninput="aggiornaTutto()"></div>
-                        <div class="input-group"><label>Consumo Medio Cella (kW h24):</label><input type="number" id="inp-kw-cella" value="35" oninput="aggiornaTutto()"></div>
+                        <h4 style="margin: 0 0 10px 0; color:var(--secondary);">Mantenimento in Cella Frigorifera</h4>
+                        <div class="input-group">
+                            <label>Giorni di Stoccaggio:</label>
+                            <input type="number" id="inp-giorni-cella" value="0" min="0" oninput="aggiornaTutto()">
+                        </div>
+                        <div class="input-group">
+                            <label>Consumo Medio Cella (kW h24):</label>
+                            <input type="number" id="inp-kw-cella" value="35" min="0" oninput="aggiornaTutto()">
+                        </div>
                     </div>
+                    
                     <div class="result-box">
-                        <span>Costo Totale Freddo/Stoccaggio:</span>
+                        <span>Costo Totale Catena del Freddo:</span>
                         <span id="out-costo-freddo" class="highlight" style="color:var(--secondary);">€ 0.00</span>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div id="imballaggi" class="view-section">
-            <div class="card">
-                <h2>📦 Fase 3: Confezionamento Materiali</h2>
-                <p>Volume in ingresso: <strong><span id="info-succo-confezionare" style="color:var(--success); font-size:1.2rem;">0</span> litri netti</strong>.</p>
+        <div id="fase3_confezionamento" class="view-section">
+            <div class="card" style="border-left: 5px solid var(--success);">
+                <h2>📦 Fase 3: Confezionamento e Imballaggi</h2>
+                <p>I calcoli dei materiali e delle ore macchina sono applicati sul volume di <strong><span id="info-succo-confezionare" style="color:var(--success); font-size:1.2rem; font-weight:bold;">0</span> litri netti</strong>.</p>
             </div>
 
             <div class="grid-2">
                 <div class="card">
-                    <h3>Macchina Confezionatrice</h3>
-                    <div class="input-group"><label>Impianto:</label><select id="sel-impianto-conf" onchange="aggiornaTutto()"><option value="nessuno">Sfuso in Cisterna</option><option value="galdi">Galdi-Goglio</option><option value="acma">ACMA</option><option value="magnoni">Magnoni</option></select></div>
-                    <div class="input-group"><label>Velocità (Unità/h):</label><input type="number" id="inp-vel-impianto" value="150" oninput="aggiornaTutto()"></div>
-                    <div class="input-group"><label>Operatori (N°):</label><input type="number" id="inp-addetti-conf" value="2" oninput="aggiornaTutto()"></div>
+                    <h3>A. Macchina Confezionatrice</h3>
+                    <div class="input-group vertical">
+                        <label>Impianto di Riempimento:</label>
+                        <select id="sel-impianto-conf" style="width: 100%;" onchange="aggiornaTutto()">
+                            <option value="nessuno">Nessuno (Carico sfuso in Cisterna/Tanker)</option>
+                            <option value="galdi">Impianto Galdi-Goglio</option>
+                            <option value="acma">Impianto ACMA</option>
+                            <option value="magnoni">Impianto Magnoni</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Velocità Impianto (Unità/ora):</label>
+                        <input type="number" id="inp-vel-impianto" value="150" oninput="aggiornaTutto()">
+                    </div>
+                    <div class="input-group">
+                        <label>Operatori alla Macchina:</label>
+                        <input type="number" id="inp-addetti-conf" value="2" oninput="aggiornaTutto()">
+                    </div>
                 </div>
 
                 <div class="card">
-                    <h3>Materiale e Distinta</h3>
-                    <div class="input-group"><label>Formato:</label><select id="sel-formato-pack" onchange="aggiornaTutto()"><option value="fusti_190">Fusti Metallo 190kg</option><option value="bins_1000">Bins Plastica 1000kg</option><option value="vaschette_14">Vaschette 14kg</option></select></div>
-                    <div style="margin-top: 15px;">
-                        <p><strong>Unità necessarie:</strong> <span id="out-unita-pack" class="badge">0</span></p>
-                        <p><strong>Costo Imballo Totale:</strong> <span id="out-costo-materiali" style="font-weight:bold; color:var(--danger);">€ 0.00</span></p>
+                    <h3>B. Formato e Materiali</h3>
+                    <div class="input-group vertical">
+                        <label>Formato Imballaggio Selezionato:</label>
+                        <select id="sel-formato-pack" style="width: 100%;" onchange="aggiornaTutto()">
+                            <option value="fusti_190">Fusti Metallo 190kg</option>
+                            <option value="fusti_220">Fusti Metallo 220kg</option>
+                            <option value="bins_1000">Bins Plastica 1000kg</option>
+                            <option value="tanker">Sfuso in Cisterna (Tanker 30.000lt)</option>
+                            <option value="vaschette_14">Vaschette 14kg</option>
+                            <option value="secchielli_20">Secchielli 20kg</option>
+                            <option value="buste_surg_500">Buste Surgelate 500gr (Cartoni)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="result-box" style="flex-direction: column; background:#fff3e0; border-left-color: var(--primary);">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                            <span>Unità Totali Necessarie:</span>
+                            <span id="out-unita-pack" class="badge" style="font-size: 1.1rem; background: var(--primary);">0</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; font-weight:normal; font-size:0.9rem;">
+                            <span>Costo Materiale (Per singola unità):</span>
+                            <span id="out-costo-singolo-pack">€ 0.00</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; font-weight:bold; margin-top:10px; padding-top:10px; border-top:1px solid #ffd0a0;">
+                            <span>Costo Totale Materiali Vuoti:</span>
+                            <span id="out-costo-materiali" style="color:var(--danger); font-size:1.1rem;">€ 0.00</span>
+                        </div>
                     </div>
                 </div>
             </div>
+            
             <div class="result-box total">
-                <span>Totale Costi Diretti Fase 3:</span>
+                <span>TOTALE COSTI DIRETTI FASE 3 (Macchina + Materiali):</span>
                 <span id="out-tot-fase3" class="highlight">€ 0.00</span>
             </div>
         </div>
 
-        <div id="riepilogo" class="view-section">
+        <div id="fase4_grand_total" class="view-section">
             <div class="card">
-                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--bg-color); padding-bottom: 10px; margin-bottom: 15px;">
-                    <h2 style="border:none; padding:0; margin:0;">📊 Report: Distinta Base Prodotto</h2>
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--bg-color); padding-bottom: 15px; margin-bottom: 20px;">
+                    <h2 style="border:none; padding:0; margin:0; font-size:1.5rem;">📊 DISTINTA BASE DI PRODUZIONE</h2>
                     <div style="display: flex; gap: 10px;">
-                        <button class="btn-export btn-pdf" onclick="window.print()">🖨️ Stampa / PDF</button>
-                        <button class="btn-export btn-csv" onclick="esportaCSV()">📊 Scarica Excel (CSV)</button>
+                        <button class="btn-export btn-pdf" onclick="window.print()">🖨️ Stampa PDF</button>
+                        <button class="btn-export btn-csv" onclick="esportaCSV()">📥 Esporta Excel</button>
                     </div>
                 </div>
                 
-                <table>
+                <table style="font-size: 1rem;">
+                    <thead>
+                        <tr>
+                            <th>Macro-Area di Costo</th>
+                            <th style="text-align:right;">Importo (€)</th>
+                        </tr>
+                    </thead>
                     <tbody>
-                        <tr><td>1. Estrazione Succo e Lavorazione Frutta</td><td class="numero" id="riep-fase1">€ 0.00</td></tr>
-                        <tr><td>2. Costi di Stoccaggio e Catena del Freddo</td><td class="numero" id="riep-freddo">€ 0.00</td></tr>
-                        <tr><td>3. Macchina Confezionatrice (Energia/Personale)</td><td class="numero" id="riep-macchina">€ 0.00</td></tr>
-                        <tr><td>4. Costo Fisico Materiali Imballaggio</td><td class="numero" id="riep-materiali">€ 0.00</td></tr>
+                        <tr>
+                            <td><strong>1. Fase Estrazione e Processi Termici</strong><br><span style="font-size:0.85rem; color:#666;">Include Scarico, Linea, Centrifughe, Processo, Lavaggi, Vapore.</span></td>
+                            <td class="numero" id="riep-fase1" style="vertical-align: middle;">€ 0.00</td>
+                        </tr>
+                        <tr>
+                            <td><strong>2. Catena del Freddo e Stoccaggio</strong><br><span style="font-size:0.85rem; color:#666;">Include Chiller di abbattimento e Mantenimento Cella.</span></td>
+                            <td class="numero" id="riep-freddo" style="vertical-align: middle;">€ 0.00</td>
+                        </tr>
+                        <tr>
+                            <td><strong>3. Macchina Confezionatrice</strong><br><span style="font-size:0.85rem; color:#666;">Include Energia e Personale addetto all'impianto di riempimento.</span></td>
+                            <td class="numero" id="riep-macchina" style="vertical-align: middle;">€ 0.00</td>
+                        </tr>
+                        <tr>
+                            <td><strong>4. Costo Fisico Materiali Imballaggio</strong><br><span style="font-size:0.85rem; color:#666;">Fusti, Bins, Vaschette, Pedane, Sacchetti asettici, ecc.</span></td>
+                            <td class="numero" id="riep-materiali" style="vertical-align: middle;">€ 0.00</td>
+                        </tr>
                     </tbody>
                 </table>
-                <div class="result-box total" style="margin-top:20px;">
-                    <span>COSTO TOTALE SESSIONE:</span>
-                    <span id="riep-totale-assoluto" class="highlight">€ 0.00</span>
+
+                <div class="result-box total" style="margin-top:25px; padding: 20px;">
+                    <span style="font-size: 1.3rem;">COSTO TOTALE SESSIONE:</span>
+                    <span id="riep-totale-assoluto" class="highlight" style="font-size: 1.5rem;">€ 0.00</span>
                 </div>
                 
-                <div class="grid-2" style="margin-top: 15px;">
-                    <div class="result-box">
-                        <div style="display:flex; flex-direction:column;">
-                            <span style="font-size:0.9rem;">Costo per Kg (Frutta Entrante)</span>
-                            <span id="riep-kg-frutta" style="font-size:1.4rem; color:var(--primary);">€ 0.00</span>
-                        </div>
+                <div class="grid-2" style="margin-top: 20px;">
+                    <div class="result-box" style="flex-direction: column; align-items: center; text-align:center;">
+                        <span style="font-size:0.95rem; color: #555;">Incidenza Industriale per Kg</span>
+                        <span style="font-size:0.85rem; color: #888;">(Riferito alla Frutta Grezza Entrante)</span>
+                        <span id="riep-kg-frutta" style="font-size:1.8rem; color:var(--primary); margin-top:10px; font-weight:900;">€ 0.00</span>
                     </div>
-                    <div class="result-box" style="border-left-color: var(--success);">
-                        <div style="display:flex; flex-direction:column;">
-                            <span style="font-size:0.9rem;">Costo Finito per Litro (Succo Netto)</span>
-                            <span id="riep-lt-finito" style="font-size:1.4rem; color:var(--success); font-weight:bold;">€ 0.00</span>
-                        </div>
+                    <div class="result-box" style="border-left-color: var(--success); flex-direction: column; align-items: center; text-align:center; background:#e8f5e9;">
+                        <span style="font-size:0.95rem; color: #555;">Costo Finito per Litro Imballato</span>
+                        <span style="font-size:0.85rem; color: #888;">(Riferito al Succo Netto Residuo)</span>
+                        <span id="riep-lt-finito" style="font-size:1.8rem; color:var(--success); margin-top:10px; font-weight:900;">€ 0.00</span>
                     </div>
                 </div>
             </div>
@@ -222,124 +354,240 @@
 
         <div id="parametri" class="view-section">
             <div class="card">
-                <h2>⚙️ Costi Unitari Master</h2>
-                <div class="input-group"><label>Costo Energia Elettrica (€/kWh)</label><input type="number" step="0.01" id="inp-tariffa-en" value="0.21" oninput="aggiornaTutto()"></div>
-                <div class="input-group"><label>Costo Personale Base (€/h)</label><input type="number" id="inp-costo-pers" value="30" oninput="aggiornaTutto()"></div>
-                <div class="input-group"><label>Costo Vapore (€/kg)</label><input type="number" step="0.001" id="inp-tariffa-vap" value="0.0555" oninput="aggiornaTutto()"></div>
+                <h2>⚙️ Costi Unitari Master (Parametri Globali)</h2>
+                <p>Questi parametri influenzano tutti i calcoli dell'intera applicazione. Modificali in base alle tariffe correnti.</p>
+                
+                <div style="max-width: 500px; margin-top: 20px;">
+                    <div class="input-group">
+                        <label><strong>Costo Energia Elettrica</strong> (€/kWh)</label>
+                        <input type="number" step="0.01" id="inp-tariffa-en" value="0.21" oninput="aggiornaTutto()">
+                    </div>
+                    <div class="input-group">
+                        <label><strong>Costo Personale Base</strong> (€/h per operatore)</label>
+                        <input type="number" id="inp-costo-pers" value="30.00" step="0.5" oninput="aggiornaTutto()">
+                    </div>
+                    <div class="input-group">
+                        <label><strong>Costo Vapore Industriale</strong> (€/kg)</label>
+                        <input type="number" step="0.001" id="inp-tariffa-vap" value="0.055" oninput="aggiornaTutto()">
+                    </div>
+                </div>
             </div>
         </div>
 
     </div>
 
     <script>
+        // --- GESTIONE NAVIGAZIONE MENU ---
         function switchView(viewId) {
             document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
             document.getElementById(viewId).classList.add('active');
             event.currentTarget.classList.add('active');
-            aggiornaTutto(); 
+            aggiornaTutto(); // Ricalcola per sicurezza al cambio pagina
         }
 
-        const dbScarico = { "rinfusa": { kw: 6.95, addetti: 1 }, "bins_coccodrillo": { kw: 24.6, addetti: 2 }, "bins_magnoni": { kw: 6.64, addetti: 1 } };
-        const dbLinee = { "bsf": { portata: 7000, kwTotali: 169.4, addetti: 2 }, "boe_1100": { portata: 5000, kwTotali: 86.1, addetti: 1 }, "torchi_faso": { portata: 10000, kwTotali: 96, addetti: 1 }, "linea_400": { portata: 5000, kwTotali: 59.6, addetti: 1 } };
-        const dbProcessi = { "nessuno": { kw: 0, addetti: 0, vapore: 0, perditaPerc: 0.0 }, "pastorizzazione": { kw: 29.86, addetti: 1, vapore: 350, perditaPerc: 0.5 }, "distillazione_joe": { kw: 47.5, addetti: 1, vapore: 1300, perditaPerc: 1.5 } };
-        const dbFreddo = { "nessuno": { kw: 0 }, "chiller_base": { kw: 20 }, "chiller_potente": { kw: 50 } };
-        const dbImpiantiConf = { "nessuno": { kw: 0 }, "galdi": { kw: 45.5 }, "acma": { kw: 38.0 }, "magnoni": { kw: 52.0 } };
-        const dbFormatiPack = { "fusti_190": { capacitaKgLt: 190, costoTot: 31.10 }, "bins_1000": { capacitaKgLt: 1000, costoTot: 27.50 }, "vaschette_14": { capacitaKgLt: 14, costoTot: 1.35 } };
+        // --- DATABASE CENTRALE PRISMA ---
+        
+        // 1. Dati Scarico (Kw e Addetti)
+        const dbScarico = { 
+            "rinfusa": { kw: 6.95, addetti: 1 }, 
+            "bins_coccodrillo": { kw: 24.6, addetti: 2 }, 
+            "bins_magnoni": { kw: 6.64, addetti: 1 } 
+        };
+        
+        // 2. Dati Linee (Kw Linea + Kw Centrifughe già sommati)
+        const dbLinee = { 
+            "bsf": { portata: 7000, kwTotali: 169.4, addetti: 1 },          
+            "boe_1100": { portata: 5000, kwTotali: 86.1, addetti: 1 },      
+            "boe_poly": { portata: 5000, kwTotali: 61.7, addetti: 1 },      
+            "boe_poly_goe": { portata: 5000, kwTotali: 46.5, addetti: 1 },  
+            "goe_est_poly": { portata: 5000, kwTotali: 57.8, addetti: 1 },  
+            "goe_est_400": { portata: 5000, kwTotali: 94.0, addetti: 1 },   
+            "goe_int_poly": { portata: 5000, kwTotali: 36.5, addetti: 1 },  
+            "torchi_faso": { portata: 10000, kwTotali: 96.0, addetti: 2 },  
+            "linea_400": { portata: 5000, kwTotali: 59.6, addetti: 1 }      
+        };
 
+        // 3. Dati Processi (Kw, Vapore kg/h, Perdita Fisiologica %)
+        const dbProcessi = { 
+            "nessuno": { kw: 0, addetti: 0, vapore: 0, perditaPerc: 0.0 }, 
+            "pastorizzazione": { kw: 29.86, addetti: 1, vapore: 350, perditaPerc: 0.5 }, 
+            "distillazione_joe": { kw: 47.5, addetti: 1, vapore: 1300, perditaPerc: 1.5 },
+            "distillazione_santoro": { kw: 35.0, addetti: 1, vapore: 900, perditaPerc: 1.2 },
+            "distillazione_pilato": { kw: 40.0, addetti: 1, vapore: 1100, perditaPerc: 1.3 },
+            "disoleazione_padovan": { kw: 25.0, addetti: 1, vapore: 0, perditaPerc: 0.8 },
+            "microfiltrazione": { kw: 15.0, addetti: 1, vapore: 0, perditaPerc: 0.2 },
+            "chiarificazione": { kw: 22.0, addetti: 1, vapore: 0, perditaPerc: 1.0 },
+            "concentrazione": { kw: 80.0, addetti: 1, vapore: 1100, perditaPerc: 2.0 }
+        };
+
+        // 4. Dati Freddo
+        const dbFreddo = { 
+            "nessuno": { kw: 0 }, 
+            "chiller_base": { kw: 20 }, 
+            "chiller_potente": { kw: 50 } 
+        };
+        
+        // 5. Macchine Confezionatrici
+        const dbImpiantiConf = { 
+            "nessuno": { kw: 0 }, 
+            "galdi": { kw: 45.5 }, 
+            "acma": { kw: 38.0 }, 
+            "magnoni": { kw: 52.0 } 
+        };
+        
+        // 6. Formati Packaging (Capacità in Kg/Lt e Costo Fisico del materiale unitario)
+        const dbFormatiPack = { 
+            "fusti_190": { capacitaKgLt: 190, costoTot: 31.10 }, 
+            "fusti_220": { capacitaKgLt: 220, costoTot: 34.50 },
+            "bins_1000": { capacitaKgLt: 1000, costoTot: 27.50 }, 
+            "tanker": { capacitaKgLt: 30000, costoTot: 0.00 }, // Lo sfuso non ha costo di imballo a perdere
+            "vaschette_14": { capacitaKgLt: 14, costoTot: 1.35 },
+            "secchielli_20": { capacitaKgLt: 20, costoTot: 2.10 },
+            "buste_surg_500": { capacitaKgLt: 0.5, costoTot: 0.15 }
+        };
+
+        // --- MOTORE DI CALCOLO PRINCIPALE ---
         function aggiornaTutto() {
+            // 0. Lettura Parametri Globali e Input
             let tariffaEn = parseFloat(document.getElementById('inp-tariffa-en').value) || 0;
             let costoPers = parseFloat(document.getElementById('inp-costo-pers').value) || 0;
             let tariffaVap = parseFloat(document.getElementById('inp-tariffa-vap').value) || 0;
+            
             let kgFrutta = parseFloat(document.getElementById('inp-kg-frutta').value) || 0;
             let ltSuccoLordo = parseFloat(document.getElementById('inp-lt-succo-lordo').value) || 0;
 
-            // FASE 1
+            // =====================================
+            // FASE 1: TRASFORMAZIONE E PROCESSI
+            // =====================================
             let dScarico = dbScarico[document.getElementById('sel-scarico').value];
+            // Stima ore scarico basata su 5000 kg/h standard
             let costoScarico = ((dScarico.kw * tariffaEn) + (dScarico.addetti * costoPers)) * (kgFrutta / 5000); 
+
             let dLinea = dbLinee[document.getElementById('sel-linea').value];
             let costoLinea = ((dLinea.kwTotali * tariffaEn) + (dLinea.addetti * costoPers)) * (kgFrutta / dLinea.portata);
+
             let dProc = dbProcessi[document.getElementById('sel-processo').value];
+            // Stima ore processo basata su 3000 lt/h standard
             let costoProc = ((dProc.kw * tariffaEn) + (dProc.addetti * costoPers) + (dProc.vapore * tariffaVap)) * (ltSuccoLordo / 3000); 
-            let costoLavaggio = ((15 * tariffaEn) + (1 * costoPers)) * (parseFloat(document.getElementById('inp-ore-lavaggio').value) || 0);
+            
+            let oreLavaggio = parseFloat(document.getElementById('inp-ore-lavaggio').value) || 0;
+            // Stima fissa lavaggio: 15kW e 1 operatore
+            let costoLavaggio = ((15 * tariffaEn) + (1 * costoPers)) * oreLavaggio;
+
             let TOT_FASE_1 = costoScarico + costoLinea + costoProc + costoLavaggio;
+            
+            // Aggiorna UI Fase 1
+            document.getElementById('out-costo-scarico').innerText = "€ " + costoScarico.toFixed(2);
+            document.getElementById('out-costo-estrazione').innerText = "€ " + costoLinea.toFixed(2);
             document.getElementById('out-tot-fase1').innerText = "€ " + TOT_FASE_1.toFixed(2);
 
-            // FASE 2
+            // =====================================
+            // FASE 2: RESE A CASCATA E FREDDO
+            // =====================================
+            // Rese
             let percPerditaProcesso = dProc.perditaPerc;
             document.getElementById('info-perc-perdita').innerText = percPerditaProcesso + "%";
+            
             let litriPersiProcesso = ltSuccoLordo * (percPerditaProcesso / 100);
-            let litriPersiTubi = ltSuccoLordo * 0.005;
+            let litriPersiTubi = ltSuccoLordo * 0.005; // 0.5% tubazioni fisse
             let ltSuccoNetto = ltSuccoLordo - litriPersiProcesso - litriPersiTubi;
+            
             document.getElementById('out-resa-lordo').innerText = ltSuccoLordo.toFixed(1);
             document.getElementById('out-resa-perdita').innerText = "- " + litriPersiProcesso.toFixed(1);
             document.getElementById('out-resa-tubi').innerText = "- " + litriPersiTubi.toFixed(1);
             document.getElementById('out-resa-netto').innerText = ltSuccoNetto.toFixed(1);
 
+            // Freddo e Cella
             let dFreddo = dbFreddo[document.getElementById('sel-raffreddamento').value];
-            let oreRaffreddamento = ltSuccoLordo / 3000;
+            let oreRaffreddamento = ltSuccoLordo / 3000; // Il chiller lavora alla velocità del processo
             let costoChiller = (dFreddo.kw * tariffaEn) * oreRaffreddamento;
+            
             let giorniCella = parseFloat(document.getElementById('inp-giorni-cella').value) || 0;
             let kwCella = parseFloat(document.getElementById('inp-kw-cella').value) || 0;
-            let costoCella = (kwCella * tariffaEn * 24) * giorniCella;
+            let costoCella = (kwCella * tariffaEn * 24) * giorniCella; // 24 ore
+            
             let TOT_FREDDO = costoChiller + costoCella;
             document.getElementById('out-costo-freddo').innerText = "€ " + TOT_FREDDO.toFixed(2);
 
-            // FASE 3
+            // =====================================
+            // FASE 3: CONFEZIONAMENTO E MATERIALI
+            // =====================================
             document.getElementById('info-succo-confezionare').innerText = ltSuccoNetto.toFixed(0);
+            
             let dImpianto = dbImpiantiConf[document.getElementById('sel-impianto-conf').value];
             let dFormato = dbFormatiPack[document.getElementById('sel-formato-pack').value];
             let velImpianto = parseFloat(document.getElementById('inp-vel-impianto').value) || 1;
             let addettiConf = parseFloat(document.getElementById('inp-addetti-conf').value) || 0;
+            
             let unitaNecessarie = Math.ceil(ltSuccoNetto / dFormato.capacitaKgLt);
             document.getElementById('out-unita-pack').innerText = unitaNecessarie;
-            let oreConfezionamento = 0, TOT_MACCHINA = 0;
+            document.getElementById('out-costo-singolo-pack').innerText = "€ " + dFormato.costoTot.toFixed(2);
+            
+            let oreConfezionamento = 0;
+            let TOT_MACCHINA = 0;
             if (document.getElementById('sel-impianto-conf').value !== "nessuno") {
                 oreConfezionamento = unitaNecessarie / velImpianto;
                 TOT_MACCHINA = ((dImpianto.kw * tariffaEn) + (addettiConf * costoPers)) * oreConfezionamento;
             }
+            
             let TOT_MATERIALI = dFormato.costoTot * unitaNecessarie;
+            let TOT_FASE_3 = TOT_MACCHINA + TOT_MATERIALI;
+            
             document.getElementById('out-costo-materiali').innerText = "€ " + TOT_MATERIALI.toFixed(2);
-            document.getElementById('out-tot-fase3').innerText = "€ " + (TOT_MACCHINA + TOT_MATERIALI).toFixed(2);
+            document.getElementById('out-tot-fase3').innerText = "€ " + TOT_FASE_3.toFixed(2);
 
-            // FASE 4 (GRAND TOTAL)
+            // =====================================
+            // FASE 4: GRAND TOTAL E INCIDENZE
+            // =====================================
             let GRAND_TOTAL = TOT_FASE_1 + TOT_FREDDO + TOT_MACCHINA + TOT_MATERIALI;
+            
             document.getElementById('riep-fase1').innerText = "€ " + TOT_FASE_1.toFixed(2);
             document.getElementById('riep-freddo').innerText = "€ " + TOT_FREDDO.toFixed(2);
             document.getElementById('riep-macchina').innerText = "€ " + TOT_MACCHINA.toFixed(2);
             document.getElementById('riep-materiali').innerText = "€ " + TOT_MATERIALI.toFixed(2);
+            
             document.getElementById('riep-totale-assoluto').innerText = "€ " + GRAND_TOTAL.toFixed(2);
-            document.getElementById('riep-kg-frutta').innerText = "€ " + (GRAND_TOTAL / kgFrutta).toFixed(4);
-            document.getElementById('riep-lt-finito').innerText = "€ " + (GRAND_TOTAL / ltSuccoNetto).toFixed(4);
+            
+            // Calcolo Indici: previeni divisione per zero
+            let incidenzaKg = kgFrutta > 0 ? (GRAND_TOTAL / kgFrutta) : 0;
+            let incidenzaLt = ltSuccoNetto > 0 ? (GRAND_TOTAL / ltSuccoNetto) : 0;
+            
+            document.getElementById('riep-kg-frutta').innerText = "€ " + incidenzaKg.toFixed(4);
+            document.getElementById('riep-lt-finito').innerText = "€ " + incidenzaLt.toFixed(4);
         }
 
         // --- FUNZIONE ESPORTAZIONE CSV ---
         function esportaCSV() {
             let csvContent = "data:text/csv;charset=utf-8,";
-            csvContent += "Parametro,Valore\n";
-            csvContent += `Frutta in ingresso (kg),${document.getElementById('inp-kg-frutta').value}\n`;
-            csvContent += `Succo Lordo (lt),${document.getElementById('inp-lt-succo-lordo').value}\n`;
-            csvContent += `Succo Netto Imballato (lt),${document.getElementById('info-succo-confezionare').innerText}\n\n`;
+            
+            csvContent += "=== PRISMA: REPORT DI PRODUZIONE ===\n\n";
+            csvContent += "DATI INGRESSO E RESE,\n";
+            csvContent += `Frutta Lavorata (kg),${document.getElementById('inp-kg-frutta').value}\n`;
+            csvContent += `Succo Lordo Estratto (lt),${document.getElementById('inp-lt-succo-lordo').value}\n`;
+            csvContent += `Succo Netto Confezionato (lt),${document.getElementById('info-succo-confezionare').innerText}\n\n`;
             
             csvContent += "RIPARTIZIONE COSTI,\n";
             csvContent += `Fase 1: Estrazione e Processi,${document.getElementById('riep-fase1').innerText.replace('€ ', '').replace(',', '')}\n`;
             csvContent += `Fase 2: Freddo e Stoccaggio,${document.getElementById('riep-freddo').innerText.replace('€ ', '').replace(',', '')}\n`;
             csvContent += `Fase 3: Macchina Confezionatrice,${document.getElementById('riep-macchina').innerText.replace('€ ', '').replace(',', '')}\n`;
-            csvContent += `Fase 3: Materiali Imballaggio,${document.getElementById('riep-materiali').innerText.replace('€ ', '').replace(',', '')}\n\n`;
+            csvContent += `Fase 3: Materiali Imballaggio Fisico,${document.getElementById('riep-materiali').innerText.replace('€ ', '').replace(',', '')}\n\n`;
             
+            csvContent += "TOTALI E INCIDENZE,\n";
             csvContent += `COSTO TOTALE SESSIONE,${document.getElementById('riep-totale-assoluto').innerText.replace('€ ', '').replace(',', '')}\n`;
-            csvContent += `Costo per Kg (Frutta),${document.getElementById('riep-kg-frutta').innerText.replace('€ ', '').replace(',', '')}\n`;
-            csvContent += `Costo per Litro (Succo Finito),${document.getElementById('riep-lt-finito').innerText.replace('€ ', '').replace(',', '')}\n`;
+            csvContent += `Incidenza su Kg Frutta,${document.getElementById('riep-kg-frutta').innerText.replace('€ ', '').replace(',', '')}\n`;
+            csvContent += `Costo Finito al Litro (Netto),${document.getElementById('riep-lt-finito').innerText.replace('€ ', '').replace(',', '')}\n`;
 
             var encodedUri = encodeURI(csvContent);
             var link = document.createElement("a");
             link.setAttribute("href", encodedUri);
-            link.setAttribute("download", "Report_PRISMA_Simulazione.csv");
+            link.setAttribute("download", "PRISMA_Report_Costi.csv");
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
         }
 
+        // Calcola tutto all'avvio dell'applicazione
         window.onload = aggiornaTutto;
     </script>
 </body>

@@ -1,594 +1,1664 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PRISMA Web App - Produzione e Costi</title>
-    <style>
-        /* =========================================
-           STILI CSS (Grafica e Layout)
-           ========================================= */
-        :root { 
-            --primary: #F26419; 
-            --secondary: #33658A; 
-            --bg-color: #F4F6F8; 
-            --sidebar-bg: #2F4858; 
-            --text-light: #FFF; 
-            --danger: #D62828; 
-            --success: #2ca02c; 
-        }
-        
-        body { margin: 0; font-family: 'Segoe UI', Tahoma, sans-serif; background-color: var(--bg-color); display: flex; height: 100vh; overflow: hidden; color: #333; }
-        
-        /* Sidebar Navigation */
-        .sidebar { width: 280px; background-color: var(--sidebar-bg); color: var(--text-light); display: flex; flex-direction: column; flex-shrink: 0; z-index: 10; box-shadow: 2px 0 5px rgba(0,0,0,0.1);}
-        .sidebar-header { padding: 20px; background-color: var(--primary); font-weight: bold; font-size: 1.2rem; text-align: center; }
-        .nav-btn { background: none; border: none; color: var(--text-light); padding: 15px 20px; text-align: left; font-size: 1rem; cursor: pointer; border-left: 4px solid transparent; transition: all 0.2s; border-bottom: 1px solid rgba(255,255,255,0.05);}
-        .nav-btn:hover, .nav-btn.active { background-color: rgba(255,255,255,0.1); border-left: 4px solid var(--primary); font-weight: bold;}
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PRISMA · Sistema Analisi Costi Agrumari</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0d0f14;--bg2:#13161e;--bg3:#1a1e2a;--surf:#1e2230;--surf2:#252a3a;
+  --bor:#2e3448;--bor2:#3a4060;
+  --acc:#e8a44a;--acc2:#c07820;--acc-g:rgba(232,164,74,.15);
+  --grn:#4ecb8c;--grn-g:rgba(78,203,140,.12);
+  --blu:#5b9cf6;--blu-g:rgba(91,156,246,.12);
+  --red:#f27070;--red-g:rgba(242,112,112,.1);
+  --pur:#a78bfa;--pur-g:rgba(167,139,250,.12);
+  --txt:#e8eaf2;--txt2:#a0a8c0;--txt3:#6a7290;
+  --fd:'DM Serif Display',serif;--fb:'DM Sans',sans-serif;
+  --sb:260px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--txt);font-family:var(--fb);font-size:14px;line-height:1.6;min-height:100vh;display:flex}
 
-        /* Main Content Area */
-        .main-content { flex-grow: 1; padding: 30px; overflow-y: auto; }
-        .view-section { display: none; animation: fadeIn 0.3s; }
-        .view-section.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+/* ── SIDEBAR ── */
+.sidebar{
+  width:var(--sb);min-width:var(--sb);height:100vh;position:sticky;top:0;
+  background:var(--bg2);border-right:1px solid var(--bor);
+  display:flex;flex-direction:column;overflow:hidden;z-index:100;
+}
+.sb-head{
+  padding:18px 16px 14px;border-bottom:1px solid var(--bor);
+  display:flex;align-items:center;gap:10px;flex-shrink:0;
+}
+.sb-logo{
+  width:36px;height:36px;min-width:36px;border-radius:9px;
+  background:linear-gradient(135deg,var(--acc),var(--acc2));
+  display:flex;align-items:center;justify-content:center;font-size:17px;
+  box-shadow:0 4px 12px rgba(232,164,74,.3);
+}
+.sb-title{font-family:var(--fd);font-size:18px;color:var(--txt)}
+.sb-sub{font-size:10px;color:var(--txt3);letter-spacing:.5px}
 
-        /* Componenti UI (Card, Grid, Input) */
-        .card { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; border: 1px solid #e1e4e8;}
-        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        h2 { color: var(--secondary); margin-top: 0; border-bottom: 2px solid var(--bg-color); padding-bottom: 10px; }
-        h3 { color: var(--primary); margin-bottom: 15px; font-size: 1.1rem; }
-        
-        .input-group { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding: 10px; background: var(--bg-color); border-radius: 5px; border-left: 3px solid #ccc; transition: all 0.2s;}
-        .input-group:hover { border-left-color: var(--primary); }
-        .input-group.vertical { flex-direction: column; align-items: flex-start; }
-        .input-group.vertical label { margin-bottom: 5px; font-size: 0.9rem; color: #555;}
-        
-        input, select { padding: 8px; border: 1px solid #ccc; border-radius: 4px; width: 180px; text-align: right; font-size: 1rem; }
-        select { text-align: left; }
-        
-        .result-box { background: #eaf4fc; padding: 15px; border-left: 5px solid var(--secondary); font-weight: bold; display: flex; justify-content: space-between; margin-top: 15px; border-radius: 4px;}
-        .result-box.total { background: #33658A; color: white; border-left: 5px solid var(--primary); font-size: 1.2rem; }
-        .highlight { color: var(--primary); }
-        .total .highlight { color: #FFF; }
-        .badge { background: var(--primary); color: white; padding: 3px 8px; border-radius: 4px; font-size: 0.85rem; font-weight: normal;}
-        
-        /* Tabelle */
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.95rem; }
-        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
-        th { background-color: var(--secondary); color: white; }
-        td.numero { text-align: right; font-family: monospace; font-size: 1rem;}
+/* Upload area in sidebar */
+.sb-upload{
+  margin:12px;border:1.5px dashed var(--bor2);border-radius:10px;
+  padding:12px;text-align:center;cursor:pointer;transition:all .2s;flex-shrink:0;
+}
+.sb-upload:hover{border-color:var(--acc);background:var(--acc-g)}
+.sb-upload input{display:none}
+.sb-upload .up-icon{font-size:20px;margin-bottom:4px}
+.sb-upload .up-text{font-size:11px;color:var(--txt3);line-height:1.4}
+.sb-upload .up-text strong{color:var(--acc);display:block;font-size:12px}
 
-        /* Pulsanti Azione */
-        .btn-export { padding: 10px 20px; font-size: 1rem; font-weight: bold; border: none; border-radius: 5px; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: background 0.3s;}
-        .btn-pdf { background-color: #D62828; color: white; }
-        .btn-pdf:hover { background-color: #b01e1e; }
-        .btn-csv { background-color: #2ca02c; color: white; }
-        .btn-csv:hover { background-color: #207a20; }
+.sb-status{
+  margin:0 12px 8px;padding:8px 10px;border-radius:8px;
+  font-size:11px;display:none;
+}
+.sb-status.ok{background:var(--grn-g);color:var(--grn);border:1px solid rgba(78,203,140,.25);display:flex;align-items:center;gap:6px}
+.sb-status.err{background:var(--red-g);color:var(--red);border:1px solid rgba(242,112,112,.25);display:flex;align-items:center;gap:6px}
 
-        /* Ottimizzazione Stampa PDF */
-        @media print {
-            .sidebar { display: none !important; }
-            .main-content { overflow: visible !important; padding: 0 !important; width: 100%; }
-            .btn-export { display: none !important; }
-            body { background-color: white; }
-            .card { box-shadow: none; border: 1px solid #ddd; page-break-inside: avoid; margin-bottom: 10px;}
-            .view-section { display: block !important; } /* Stampa tutto il documento */
-            #parametri { display: none !important; } /* Nascondi i parametri nella stampa */
-        }
-    </style>
+.sb-nav{flex:1;overflow-y:auto;padding:4px 0 16px}
+.sb-nav::-webkit-scrollbar{width:4px}
+.sb-nav::-webkit-scrollbar-track{background:transparent}
+.sb-nav::-webkit-scrollbar-thumb{background:var(--bor2);border-radius:2px}
+
+/* Nav groups */
+.nav-group{margin-bottom:2px}
+.nav-group-header{
+  display:flex;align-items:center;gap:8px;padding:8px 14px;
+  cursor:pointer;user-select:none;transition:background .15s;
+  font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--txt3);
+}
+.nav-group-header:hover{background:rgba(255,255,255,.03)}
+.nav-group-arrow{margin-left:auto;font-size:10px;transition:transform .2s;color:var(--txt3)}
+.nav-group-header.open .nav-group-arrow{transform:rotate(90deg)}
+.nav-group-items{display:none;padding:0 8px 4px}
+.nav-group-items.open{display:block}
+
+.nav-item{
+  display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;
+  cursor:pointer;transition:all .15s;color:var(--txt2);font-size:12.5px;
+  border:1px solid transparent;text-decoration:none;
+}
+.nav-item:hover{background:var(--surf);color:var(--txt)}
+.nav-item.active{background:var(--acc-g);color:var(--acc);border-color:rgba(232,164,74,.2)}
+.nav-item .nav-ico{font-size:14px;min-width:18px;text-align:center}
+.nav-item .nav-badge{
+  margin-left:auto;font-size:9px;font-weight:700;padding:1px 5px;
+  border-radius:10px;background:var(--surf2);color:var(--txt3);
+}
+.nav-item.active .nav-badge{background:rgba(232,164,74,.2);color:var(--acc)}
+
+/* Export button */
+.sb-export{
+  margin:8px 12px 12px;padding:9px;border-radius:9px;
+  background:linear-gradient(135deg,rgba(78,203,140,.15),rgba(78,203,140,.08));
+  border:1px solid rgba(78,203,140,.25);color:var(--grn);
+  font-size:12px;font-weight:600;cursor:pointer;text-align:center;
+  transition:all .2s;flex-shrink:0;display:none;
+}
+.sb-export:hover{background:rgba(78,203,140,.22)}
+
+/* ── MAIN ── */
+.main{flex:1;min-width:0;display:flex;flex-direction:column;height:100vh;overflow:hidden}
+.topbar{
+  height:58px;flex-shrink:0;background:rgba(13,15,20,.92);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--bor);padding:0 28px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.breadcrumb{font-size:13px;color:var(--txt3);display:flex;align-items:center;gap:6px}
+.breadcrumb .cur{color:var(--txt);font-weight:600}
+.topbar-pills{display:flex;align-items:center;gap:8px}
+.pill{
+  display:flex;align-items:center;gap:5px;padding:4px 12px;
+  background:var(--surf);border:1px solid var(--bor);border-radius:20px;
+  font-size:11px;color:var(--txt2);
+}
+.pill .dot{width:6px;height:6px;border-radius:50%;background:var(--grn)}
+
+.content-area{flex:1;overflow-y:auto;overflow-x:hidden}
+.content-area::-webkit-scrollbar{width:6px}
+.content-area::-webkit-scrollbar-track{background:var(--bg)}
+.content-area::-webkit-scrollbar-thumb{background:var(--bor2);border-radius:3px}
+
+/* ── PAGES ── */
+.page{display:none;padding:28px 32px;animation:fadeIn .3s ease}
+.page.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── WELCOME SCREEN ── */
+.welcome{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  min-height:calc(100vh - 58px);text-align:center;padding:40px;
+}
+.welcome-logo{
+  width:80px;height:80px;border-radius:20px;
+  background:linear-gradient(135deg,var(--acc),var(--acc2));
+  display:flex;align-items:center;justify-content:center;font-size:36px;
+  box-shadow:0 8px 32px rgba(232,164,74,.3);margin-bottom:24px;
+}
+.welcome h1{font-family:var(--fd);font-size:38px;margin-bottom:10px}
+.welcome p{color:var(--txt2);font-size:15px;max-width:480px;line-height:1.7;margin-bottom:32px}
+.upload-big{
+  border:2px dashed var(--bor2);border-radius:16px;padding:40px 60px;
+  cursor:pointer;transition:all .2s;display:inline-block;
+}
+.upload-big:hover{border-color:var(--acc);background:var(--acc-g)}
+.upload-big input{display:none}
+.upload-big .ub-icon{font-size:40px;margin-bottom:12px}
+.upload-big .ub-title{font-family:var(--fd);font-size:20px;color:var(--acc);margin-bottom:6px}
+.upload-big .ub-sub{font-size:13px;color:var(--txt3)}
+
+/* ── TYPOGRAPHY ── */
+.ey{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--acc);margin-bottom:5px}
+.ptit{font-family:var(--fd);font-size:28px;line-height:1.2;color:var(--txt)}
+.psub{font-size:13px;color:var(--txt2);margin-top:4px;margin-bottom:22px}
+.stit{
+  font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--txt3);
+  margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--bor);
+  display:flex;align-items:center;gap:8px;margin-top:20px;
+}
+.stit:first-child{margin-top:0}
+.stit::before{content:'';width:3px;height:3px;border-radius:50%;background:var(--acc)}
+
+/* ── KPI ── */
+.kr{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:22px}
+.kc{
+  background:var(--surf);border:1px solid var(--bor);border-radius:12px;
+  padding:16px 18px;position:relative;overflow:hidden;transition:border-color .2s,transform .2s;
+}
+.kc:hover{border-color:var(--bor2);transform:translateY(-1px)}
+.kc::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:12px 12px 0 0}
+.kc.a::before{background:linear-gradient(90deg,var(--acc),var(--acc2))}
+.kc.g::before{background:var(--grn)}
+.kc.b::before{background:var(--blu)}
+.kc.r::before{background:var(--red)}
+.kc.p::before{background:var(--pur)}
+.kl{font-size:10px;color:var(--txt3);font-weight:600;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px}
+.kv{font-family:var(--fd);font-size:24px;color:var(--txt);line-height:1}
+.ku{font-size:11px;color:var(--txt2);margin-left:2px}
+.ks{font-size:11px;color:var(--txt3);margin-top:4px}
+.kd{display:inline-flex;font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;margin-top:3px}
+.kd.p{background:var(--grn-g);color:var(--grn)}
+.kd.n{background:var(--red-g);color:var(--red)}
+
+/* ── INPUTS ── */
+.irow{display:flex;align-items:center;gap:10px;margin-bottom:9px;flex-wrap:wrap}
+.irow label{font-size:12px;color:var(--txt2);font-weight:500;min-width:200px}
+input[type=number],select,input[type=text]{
+  background:var(--bg3);border:1px solid var(--bor2);border-radius:7px;
+  color:var(--txt);font-family:var(--fb);font-size:13px;padding:6px 11px;
+  outline:none;transition:border-color .2s,box-shadow .2s;
+}
+input[type=number]{color:var(--acc);font-family:var(--fd);font-size:14px;width:140px}
+input[type=number]:focus,select:focus{border-color:var(--acc);box-shadow:0 0 0 3px var(--acc-g)}
+select{cursor:pointer;min-width:200px}
+select option{background:var(--bg3)}
+.ibox{background:var(--surf);border:1px solid var(--bor);border-radius:12px;padding:18px 20px;margin-bottom:20px}
+.ibox h4{font-size:12px;font-weight:700;color:var(--txt);margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid var(--bor);text-transform:uppercase;letter-spacing:.8px}
+
+/* ── TABLES ── */
+.tw{background:var(--surf);border:1px solid var(--bor);border-radius:12px;overflow:hidden;margin-bottom:18px}
+.tw-head{padding:12px 16px;border-bottom:1px solid var(--bor);display:flex;align-items:center;justify-content:space-between}
+.tw-head h3{font-size:13px;font-weight:600;color:var(--txt)}
+.tw-head span{font-size:11px;color:var(--txt3)}
+.tw-scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th{background:var(--bg3);padding:8px 12px;text-align:left;font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--txt3);white-space:nowrap}
+td{padding:8px 12px;border-top:1px solid var(--bor);font-size:12px;color:var(--txt2);vertical-align:middle}
+tr:hover td{background:var(--bg3)}
+td.n{font-family:var(--fd);font-size:13px;color:var(--txt);text-align:right;white-space:nowrap}
+td.av{color:var(--acc)!important;font-weight:600}
+td.gv{color:var(--grn)!important}
+td.rv{color:var(--red)!important}
+td.bv{color:var(--blu)!important}
+td.lc{font-weight:500;color:var(--txt)}
+td.sl{color:var(--txt3);font-size:11px;padding-left:24px}
+.tag{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700}
+.tag.y{background:var(--grn-g);color:var(--grn)}
+.tag.no{background:rgba(160,168,192,.08);color:var(--txt3)}
+.tag.ind{background:var(--blu-g);color:var(--blu)}
+td select{background:var(--bg3);border:1px solid var(--bor2);border-radius:6px;color:var(--acc);font-size:11px;padding:3px 7px;cursor:pointer;outline:none}
+td select:focus{border-color:var(--acc)}
+
+/* ── GRID ── */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:18px}
+@media(max-width:1200px){.g2{grid-template-columns:1fr}.g3{grid-template-columns:1fr 1fr}}
+@media(max-width:900px){.g3{grid-template-columns:1fr}}
+
+/* ── INFO CARD ── */
+.ic{background:var(--surf);border:1px solid var(--bor);border-radius:12px;padding:16px 18px}
+.ic h4{font-size:11px;font-weight:700;color:var(--txt);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--bor);text-transform:uppercase;letter-spacing:.8px}
+.ir{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:5px 0;border-bottom:1px solid rgba(46,52,72,.4)}
+.ir:last-child{border-bottom:none}
+.ik{font-size:11px;color:var(--txt3)}
+.iv{font-size:12px;font-weight:600;color:var(--txt);text-align:right}
+.iv.a{color:var(--acc)}.iv.g{color:var(--grn)}.iv.r{color:var(--red)}.iv.b{color:var(--blu)}
+.sep{border-top:2px solid var(--bor2)!important;margin-top:4px;padding-top:8px!important}
+.sep2{border-top:2px solid var(--acc)!important;margin-top:4px;padding-top:8px!important}
+
+/* ── HIGHLIGHT ── */
+.hl{
+  background:linear-gradient(135deg,rgba(232,164,74,.08),rgba(192,120,32,.04));
+  border:1px solid rgba(232,164,74,.2);border-radius:12px;padding:16px 20px;
+  margin-bottom:20px;display:flex;align-items:center;gap:16px;
+}
+.hl-ico{font-size:28px;flex-shrink:0}
+.hl h3{font-family:var(--fd);font-size:17px;color:var(--acc)}
+.hl p{font-size:12px;color:var(--txt2);margin-top:2px}
+
+/* ── PROGRESS ── */
+.pr{margin-bottom:10px}
+.prh{display:flex;justify-content:space-between;margin-bottom:4px}
+.prl{font-size:11px;color:var(--txt2)}
+.prv{font-size:11px;font-weight:600;color:var(--txt)}
+.prb{height:5px;background:var(--bg3);border-radius:10px;overflow:hidden}
+.prf{height:100%;border-radius:10px;transition:width .8s ease}
+.fa{background:linear-gradient(90deg,var(--acc),var(--acc2))}
+.fg{background:var(--grn)}.fb{background:var(--blu)}
+.fr{background:var(--red)}.fd2{background:var(--txt3)}
+
+/* ── TOGGLE ── */
+.sw{position:relative;display:inline-block;width:40px;height:20px}
+.sw input{opacity:0;width:0;height:0}
+.sl2{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:var(--bg3);border:1px solid var(--bor2);border-radius:20px;transition:.25s}
+.sl2::before{position:absolute;content:'';height:14px;width:14px;left:3px;bottom:2px;background:var(--txt3);border-radius:50%;transition:.25s}
+input:checked+.sl2{background:var(--grn-g);border-color:var(--grn)}
+input:checked+.sl2::before{transform:translateX(20px);background:var(--grn)}
+
+/* ── CHART ── */
+.ch-wrap{background:var(--surf);border:1px solid var(--bor);border-radius:12px;padding:16px 18px;margin-bottom:18px}
+.ch-wrap h4{font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--txt3);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--bor)}
+
+/* ── PKG CARDS ── */
+.pkcg{display:grid;grid-template-columns:repeat(auto-fill,minmax(165px,1fr));gap:10px;margin-bottom:20px}
+.pkc{background:var(--surf);border:1px solid var(--bor);border-radius:10px;padding:13px;transition:border-color .2s,transform .2s;cursor:pointer}
+.pkc:hover{border-color:var(--bor2);transform:translateY(-2px)}
+.pkc.sel{border-color:rgba(232,164,74,.45);background:linear-gradient(135deg,rgba(232,164,74,.06),var(--surf))}
+.pkn{font-size:12px;font-weight:600;color:var(--txt);margin-bottom:2px}
+.pkw{font-size:10px;color:var(--txt3);margin-bottom:7px}
+
+/* ── NOTE ── */
+.nb2{background:var(--bg3);border:1px solid var(--bor);border-left:3px solid var(--blu);border-radius:0 9px 9px 0;padding:10px 14px;font-size:12px;color:var(--txt2);margin-bottom:16px;line-height:1.6}
+.nb2 strong{color:var(--blu)}
+.nb-warn{border-left-color:var(--acc)}
+.nb-warn strong{color:var(--acc)}
+
+/* ── DATA TABLE (fogli parametri raw) ── */
+.raw-table-wrap{background:var(--surf);border:1px solid var(--bor);border-radius:12px;overflow:hidden;margin-bottom:18px}
+.raw-table-scroll{overflow:auto;max-height:500px}
+.raw-table-scroll::-webkit-scrollbar{width:4px;height:4px}
+.raw-table-scroll::-webkit-scrollbar-thumb{background:var(--bor2);border-radius:2px}
+.raw-table{width:100%;border-collapse:collapse;font-size:11px}
+.raw-table th{background:var(--bg3);padding:7px 10px;text-align:left;color:var(--txt3);font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;white-space:nowrap;position:sticky;top:0;z-index:2}
+.raw-table td{padding:6px 10px;border-top:1px solid var(--bor);color:var(--txt2);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.raw-table tr:hover td{background:var(--bg3);color:var(--txt)}
+.raw-table td.cell-blue{color:var(--acc);font-weight:600}
+.raw-table td.cell-green{color:var(--grn)}
+.raw-table td.cell-num{text-align:right;font-family:var(--fd)}
+
+/* ── FOOTER ── */
+.pf{margin-top:32px;padding-top:16px;border-top:1px solid var(--bor);display:flex;align-items:center;justify-content:space-between;color:var(--txt3);font-size:11px}
+
+/* ── BADGE ── */
+.badge-ok{display:inline-flex;align-items:center;padding:3px 10px;background:var(--grn-g);border:1px solid rgba(78,203,140,.3);border-radius:20px;font-size:11px;color:var(--grn);font-weight:600}
+.badge-warn{display:inline-flex;align-items:center;padding:3px 10px;background:var(--red-g);border:1px solid rgba(242,112,112,.3);border-radius:20px;font-size:11px;color:var(--red);font-weight:600}
+.badge-info{display:inline-flex;align-items:center;padding:3px 10px;background:var(--acc-g);border:1px solid rgba(232,164,74,.3);border-radius:20px;font-size:11px;color:var(--acc);font-weight:600}
+
+@media(max-width:900px){
+  :root{--sb:200px}
+  .page{padding:16px}
+  .kr{grid-template-columns:1fr 1fr}
+}
+</style>
 </head>
 <body>
 
-    <div class="sidebar">
-        <div class="sidebar-header">🍊 PRISMA Web App</div>
-        <button class="nav-btn active" onclick="switchView('fase1_estrazione')">🏭 1. Estrazione & Processi</button>
-        <button class="nav-btn" onclick="switchView('fase2_rese_freddo')">❄️ 2. Rese & Freddo</button>
-        <button class="nav-btn" onclick="switchView('fase3_confezionamento')">📦 3. Confezionamento</button>
-        <button class="nav-btn" onclick="switchView('fase4_grand_total')">📊 4. Grand Total & Export</button>
-        <button class="nav-btn" onclick="switchView('parametri')" style="margin-top: auto;">⚙️ Costi Unitari Master</button>
+<!-- ═══════════════════════════════════════
+     SIDEBAR
+═══════════════════════════════════════ -->
+<nav class="sidebar" id="sidebar">
+  <div class="sb-head">
+    <div class="sb-logo">🍊</div>
+    <div><div class="sb-title">PRISMA</div><div class="sb-sub">Sistema Analisi Costi</div></div>
+  </div>
+
+  <!-- Upload -->
+  <label class="sb-upload" id="sb-upload-label">
+    <input type="file" id="file-input" accept=".xlsx,.xls" onchange="loadFile(this)">
+    <div class="up-icon">📂</div>
+    <div class="up-text"><strong>Carica PRISMA.xlsx</strong>Trascina o clicca per caricare</div>
+  </label>
+  <div class="sb-status" id="sb-status"></div>
+
+  <!-- Navigation -->
+  <div class="sb-nav" id="sb-nav">
+    <!-- groups rendered by JS -->
+  </div>
+
+  <!-- Export -->
+  <button class="sb-export" id="sb-export" onclick="exportXLSX()">📥 Esporta PRISMA.xlsx</button>
+</nav>
+
+<!-- ═══════════════════════════════════════
+     MAIN
+═══════════════════════════════════════ -->
+<div class="main">
+  <div class="topbar">
+    <div class="breadcrumb" id="topbar-bc">PRISMA <span style="opacity:.4">›</span> <span class="cur" id="topbar-title">Benvenuto</span></div>
+    <div class="topbar-pills">
+      <div class="pill" id="pill-agrume" style="display:none"><span>🍊</span><span id="pill-agr-txt">Limone</span></div>
+      <div class="pill" id="pill-kg" style="display:none"><div class="dot"></div><span id="pill-kg-txt">100.000 kg</span></div>
+      <div class="pill" id="pill-file" style="display:none"><span id="pill-file-txt">—</span></div>
+    </div>
+  </div>
+
+  <div class="content-area">
+    <!-- WELCOME PAGE -->
+    <div id="page-welcome" class="active" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:calc(100vh - 58px);text-align:center;padding:40px">
+      <div style="width:80px;height:80px;border-radius:20px;background:linear-gradient(135deg,var(--acc),var(--acc2));display:flex;align-items:center;justify-content:center;font-size:36px;box-shadow:0 8px 32px rgba(232,164,74,.3);margin-bottom:24px">🍊</div>
+      <h1 style="font-family:var(--fd);font-size:36px;margin-bottom:10px">PRISMA</h1>
+      <p style="color:var(--txt2);font-size:15px;max-width:480px;line-height:1.7;margin-bottom:32px">Sistema completo di analisi costi per la trasformazione di prodotti agrumari. Carica il file Excel per iniziare.</p>
+      <label style="border:2px dashed var(--bor2);border-radius:16px;padding:36px 56px;cursor:pointer;transition:all .2s;display:inline-block" onmouseover="this.style.borderColor='var(--acc)';this.style.background='var(--acc-g)'" onmouseout="this.style.borderColor='var(--bor2)';this.style.background=''">
+        <input type="file" accept=".xlsx,.xls" style="display:none" onchange="loadFile(this)">
+        <div style="font-size:38px;margin-bottom:10px">📂</div>
+        <div style="font-family:var(--fd);font-size:18px;color:var(--acc);margin-bottom:4px">Carica PRISMA.xlsx</div>
+        <div style="font-size:12px;color:var(--txt3)">Clicca o trascina il file qui</div>
+      </label>
     </div>
 
-    <div class="main-content">
-        
-        <div id="fase1_estrazione" class="view-section active">
-            <div class="card">
-                <h2>🏭 Fase 1: Inserimento Volumi e Estrazione Base</h2>
-                <div class="grid-2">
-                    <div class="input-group">
-                        <label>▶ FRUTTA IN INGRESSO (kg)</label>
-                        <input type="number" id="inp-kg-frutta" value="100000" oninput="aggiornaTutto()">
-                    </div>
-                    <div class="input-group">
-                        <label>▶ SUCCO LORDO ESTRATTO (lt) <span class="badge" title="Volume prima delle perdite termiche">Lordo</span></label>
-                        <input type="number" id="inp-lt-succo-lordo" value="32000" oninput="aggiornaTutto()">
-                    </div>
-                </div>
-            </div>
+    <!-- DYNAMIC PAGES (rendered by JS) -->
+    <div id="pages-container"></div>
+  </div>
+</div>
 
-            <div class="grid-2">
-                <div class="card">
-                    <h3>A. Scarico Frutta</h3>
-                    <div class="input-group vertical">
-                        <label>Tipologia Impianto Scarico:</label>
-                        <select id="sel-scarico" onchange="aggiornaTutto()">
-                            <option value="rinfusa">Rinfusa</option>
-                            <option value="bins_coccodrillo">Bins + Coccodrillo</option>
-                            <option value="bins_magnoni">Bins + Magnoni</option>
-                        </select>
-                    </div>
-                    <div class="result-box">
-                        <span>Costo Scarico:</span><span id="out-costo-scarico" class="highlight">€ 0.00</span>
-                    </div>
-                </div>
+<script>
+// ═══════════════════════════════════════════════════════════════
+// STATO GLOBALE
+// ═══════════════════════════════════════════════════════════════
+let WB = null;        // workbook XLSX
+let SHEETS = {};      // { sheetName: array-of-arrays }
+let CELL_DATA = {};   // { sheetName: { 'A1': value, ... } } — celle modificate
+let currentPage = 'welcome';
+let fileName = '';
 
-                <div class="card">
-                    <h3>B. Linea Estrazione & Centrifughe</h3>
-                    <div class="input-group vertical">
-                        <label>Seleziona Linea Attiva:</label>
-                        <select id="sel-linea" onchange="aggiornaTutto()">
-                            <option value="bsf">Linea B/SF (7000 kg/h)</option>
-                            <option value="boe_1100">Linea BOE + 1100 (5000 kg/h)</option>
-                            <option value="boe_poly">Linea BOE + POLY (5000 kg/h)</option>
-                            <option value="boe_poly_goe">Linea BOE + POLY GOE (5000 kg/h)</option>
-                            <option value="goe_est_poly">Linea GOE EST + POLY (5000 kg/h)</option>
-                            <option value="goe_est_400">Linea GOE EST + 400 (5000 kg/h)</option>
-                            <option value="goe_int_poly">Linea GOE INT + POLY (5000 kg/h)</option>
-                            <option value="torchi_faso">TORCHI FASO (10000 kg/h)</option>
-                            <option value="linea_400">Linea 400 (Solo Succo - 5000 kg/h)</option>
-                        </select>
-                    </div>
-                    <div class="result-box">
-                        <span>Costo Estrazione:</span><span id="out-costo-estrazione" class="highlight">€ 0.00</span>
-                    </div>
-                </div>
-            </div>
+// ── Navigazione: struttura dei 29 fogli ──
+const NAV_GROUPS = [
+  {
+    id:'dashboard', label:'Dashboard', icon:'📊',
+    items:[
+      {id:'dash-trasf',    label:'Trasformazione',     sheet:'DASHBOARD TRASF.', icon:'⚙️', badge:'LIVE'},
+      {id:'dash-proc',     label:'Processi',            sheet:'DASHBOARD PROCESSI', icon:'🔬'},
+      {id:'dash-imb',      label:'Imballaggi',          sheet:'DASHBOARD IMBALLAGGI', icon:'📦'},
+    ]
+  },
+  {
+    id:'parametri', label:'Parametri Processo', icon:'⚙️',
+    items:[
+      {id:'p-conc',   label:'Concentrazione',   sheet:'Param. Concentrazione', icon:'🌡️'},
+      {id:'p-rese',   label:'Rese',              sheet:'Param. Rese', icon:'📉'},
+      {id:'p-freddo', label:'Freddo',            sheet:'Param. Freddo', icon:'❄️'},
+      {id:'p-cist',   label:'Cisterna',          sheet:'Param. Cisterna', icon:'🚚'},
+      {id:'p-scarico',label:'Energia Scarico',   sheet:'Param. En. Scarico', icon:'⚡'},
+      {id:'p-linee',  label:'Linee Prep.',       sheet:'Param. linee(A,B,C,D,)', icon:'🏭'},
+      {id:'p-entrasf',label:'Energia Linee',     sheet:'Param. En. Linee trasf.', icon:'⚡'},
+      {id:'p-enacq',  label:'Energia Acq/Ric.', sheet:'Param. En. Acq-Ricez.', icon:'⚡'},
+      {id:'p-centr',  label:'Centrifughe',       sheet:'Param. Centr.', icon:'🔄'},
+      {id:'p-rsucco', label:'Raff. Succo',       sheet:'Param. Raffr. Stocc. Succo', icon:'🧊'},
+      {id:'p-rtorch', label:'Raff. Torchiato',   sheet:'Param.Raffr.Stocc.Torch.', icon:'🧊'},
+      {id:'p-lavparam',label:'Param. Lavaggio',  sheet:'Param. Lavaggio Linee', icon:'🚿'},
+      {id:'p-lav',    label:'Lavaggio Linee',    sheet:'Lavaggio Linee', icon:'🚿'},
+      {id:'p-chiar',  label:'Chiarificazione',   sheet:'Param. Chiarificazione', icon:'🔬'},
+      {id:'p-past',   label:'Pastorizzazione',   sheet:'Param. Pastorizzazione', icon:'🌡️'},
+      {id:'p-dpad',   label:'Disol. Padovan',    sheet:'Param. Disol. Padovan', icon:'⚗️'},
+      {id:'p-dpil',   label:'Distill. Pilato',   sheet:'Param. Distill. Pilato', icon:'⚗️'},
+      {id:'p-dsan',   label:'Distill. Santoro',  sheet:'Param. Distill. Santoro', icon:'⚗️'},
+      {id:'p-djoe',   label:'Distill. Joe',      sheet:'Param. Distill. Joe', icon:'⚗️'},
+      {id:'p-micro',  label:'Microfiltrazione',  sheet:'Param. Microfiltrazione', icon:'🔬'},
+    ]
+  },
+  {
+    id:'impianti', label:'Impianti', icon:'🏭',
+    items:[
+      {id:'i-acma',   label:'Impianto ACMA',     sheet:'Impianto ACMA', icon:'📦'},
+      {id:'i-magnoni',label:'Impianto Magnoni',  sheet:'Impianto Magnoni', icon:'📦'},
+      {id:'i-galdi',  label:'Impianto Galdi-Goglio', sheet:'Impianto Galdi-Goglio', icon:'📦'},
+    ]
+  },
+  {
+    id:'dati', label:'Dati & Prezzi', icon:'💶',
+    items:[
+      {id:'d-listpkg', label:'Liste Packaging',  sheet:'Liste Packaging', icon:'📋'},
+      {id:'d-cu',      label:'Costi Unitari',    sheet:'Costi unitari', icon:'💶', badge:'MASTER'},
+      {id:'d-mix',     label:'Mix Prezzi Vendita',sheet:'Mix Prezzi Vendita', icon:'💰'},
+    ]
+  }
+];
 
-            <div class="card">
-                <h3>C. Processi sul Succo & Lavaggi Impianto</h3>
-                <div class="grid-2">
-                    <div class="input-group vertical">
-                        <label>Processo Termico / Speciale:</label>
-                        <select id="sel-processo" onchange="aggiornaTutto()">
-                            <option value="nessuno">Nessun Processo (Succo Crudo)</option>
-                            <option value="pastorizzazione">Pastorizzazione Tubolare</option>
-                            <option value="distillazione_joe">Distillatore Joe</option>
-                            <option value="distillazione_santoro">Distillatore Santoro</option>
-                            <option value="distillazione_pilato">Distillatore Pilato</option>
-                            <option value="disoleazione_padovan">Disoleazione Padovan</option>
-                            <option value="microfiltrazione">Microfiltrazione</option>
-                            <option value="chiarificazione">Chiarificazione</option>
-                            <option value="concentrazione">Concentrazione (Evaporatore)</option>
-                        </select>
-                    </div>
-                    <div class="input-group vertical">
-                        <label>Ore Totali Lavaggio Linee (h):</label>
-                        <input type="number" id="inp-ore-lavaggio" value="2.0" step="0.5" style="width: 100%;" oninput="aggiornaTutto()">
-                    </div>
-                </div>
-            </div>
-            
-            <div class="result-box total">
-                <span>TOTALE COSTI DIRETTI FASE 1:</span>
-                <span id="out-tot-fase1" class="highlight">€ 0.00</span>
-            </div>
-        </div>
+// ── Utils ──
+const fmt  = (n,d=2) => (n==null||isNaN(n)) ? '—' : (+n).toLocaleString('it-IT',{minimumFractionDigits:d,maximumFractionDigits:d});
+const fmtK = n => isNaN(n) ? '—' : Math.round(+n).toLocaleString('it-IT');
+const fmtE = (n,d=2) => fmt(n,d)+' €';
+const gv   = id => parseFloat(document.getElementById(id)?.value) || 0;
+const gs   = id => document.getElementById(id)?.value || '';
+const set  = (id,v) => { const el=document.getElementById(id); if(el) el.innerHTML=v; };
+const CU   = id => parseFloat(document.getElementById(id)?.value) || 0;
 
-        <div id="fase2_rese_freddo" class="view-section">
-            <div class="grid-2">
-                <div class="card">
-                    <h2>📉 Rese a Cascata e Cali Peso</h2>
-                    <p>Il volume si riduce in base al processo termico selezionato.</p>
-                    <table>
-                        <thead><tr><th>Fase di Trasferimento</th><th>Volume (lt)</th></tr></thead>
-                        <tbody>
-                            <tr><td>Succo Lordo Iniziale</td><td class="numero" id="out-resa-lordo">0.0</td></tr>
-                            <tr style="color:var(--danger);">
-                                <td>Perdita Processo (<span id="info-perc-perdita">0%</span>)</td>
-                                <td class="numero" id="out-resa-perdita">- 0.0</td>
-                            </tr>
-                            <tr style="color:var(--danger);">
-                                <td>Perdita Tubazioni Trasferimento (0.5%)</td>
-                                <td class="numero" id="out-resa-tubi">- 0.0</td>
-                            </tr>
-                            <tr style="font-weight:bold; background:#e8f5e9;">
-                                <td>SUCCO NETTO DA CONFEZIONARE</td>
-                                <td class="numero" id="out-resa-netto" style="color:var(--success); font-size: 1.1rem;">0.0</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+// ═══════════════════════════════════════════════════════════════
+// CARICAMENTO FILE
+// ═══════════════════════════════════════════════════════════════
+function loadFile(input){
+  const file = input.files[0];
+  if(!file) return;
+  fileName = file.name;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      WB = XLSX.read(e.target.result, { type:'array', cellStyles:true, cellNF:true });
+      // Parse ogni foglio
+      SHEETS = {};
+      WB.SheetNames.forEach(name => {
+        const ws = WB.Sheets[name];
+        SHEETS[name] = XLSX.utils.sheet_to_json(ws, { header:1, defval:'' });
+      });
+      CELL_DATA = {};
+      WB.SheetNames.forEach(name => {
+        CELL_DATA[name] = {};
+        const ws = WB.Sheets[name];
+        Object.keys(ws).forEach(addr => {
+          if(addr[0]==='!') return;
+          CELL_DATA[name][addr] = ws[addr];
+        });
+      });
+      showStatus('ok', `✓ ${file.name} — ${WB.SheetNames.length} fogli caricati`);
+      document.getElementById('sb-export').style.display = 'block';
+      document.getElementById('pill-file').style.display = 'flex';
+      document.getElementById('pill-file-txt').textContent = file.name;
+      buildNav();
+      populateInputsFromXLSX();
+      navigateTo('dash-trasf');
+    } catch(err){
+      showStatus('err', '✗ Errore lettura file: ' + err.message);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
 
-                <div class="card">
-                    <h2>❄️ Energia Invisibile: Freddo & Cella</h2>
-                    <div class="input-group vertical">
-                        <label>Raffreddamento Succo Pre-Stoccaggio (Chiller):</label>
-                        <select id="sel-raffreddamento" style="width: 100%;" onchange="aggiornaTutto()">
-                            <option value="nessuno">Nessun Raffreddamento (Diretto)</option>
-                            <option value="chiller_base">Chiller Scambiatore a Piastre (20 kW)</option>
-                            <option value="chiller_potente">Chiller Potente (50 kW)</option>
-                        </select>
-                    </div>
+function showStatus(type, msg){
+  const el = document.getElementById('sb-status');
+  el.className = 'sb-status ' + type;
+  el.textContent = msg;
+}
 
-                    <div style="border-top:1px solid #eee; margin-top:15px; padding-top:15px;">
-                        <h4 style="margin: 0 0 10px 0; color:var(--secondary);">Mantenimento in Cella Frigorifera</h4>
-                        <div class="input-group">
-                            <label>Giorni di Stoccaggio:</label>
-                            <input type="number" id="inp-giorni-cella" value="0" min="0" oninput="aggiornaTutto()">
-                        </div>
-                        <div class="input-group">
-                            <label>Consumo Medio Cella (kW h24):</label>
-                            <input type="number" id="inp-kw-cella" value="35" min="0" oninput="aggiornaTutto()">
-                        </div>
-                    </div>
-                    
-                    <div class="result-box">
-                        <span>Costo Totale Catena del Freddo:</span>
-                        <span id="out-costo-freddo" class="highlight" style="color:var(--secondary);">€ 0.00</span>
-                    </div>
-                </div>
-            </div>
-        </div>
+// ═══════════════════════════════════════════════════════════════
+// BUILD NAVIGATION
+// ═══════════════════════════════════════════════════════════════
+function buildNav(){
+  const nav = document.getElementById('sb-nav');
+  nav.innerHTML = '';
+  NAV_GROUPS.forEach(group => {
+    const div = document.createElement('div');
+    div.className = 'nav-group';
+    div.innerHTML = `
+      <div class="nav-group-header open" onclick="toggleGroup(this)">
+        <span>${group.icon}</span>
+        <span>${group.label}</span>
+        <span class="nav-group-arrow">▶</span>
+      </div>
+      <div class="nav-group-items open" id="grp-${group.id}">
+        ${group.items.map(item => `
+          <div class="nav-item" id="nav-${item.id}" onclick="navigateTo('${item.id}')">
+            <span class="nav-ico">${item.icon}</span>
+            <span>${item.label}</span>
+            ${item.badge ? `<span class="nav-badge">${item.badge}</span>` : ''}
+          </div>`).join('')}
+      </div>`;
+    nav.appendChild(div);
+  });
+}
 
-        <div id="fase3_confezionamento" class="view-section">
-            <div class="card" style="border-left: 5px solid var(--success);">
-                <h2>📦 Fase 3: Confezionamento e Imballaggi</h2>
-                <p>I calcoli dei materiali e delle ore macchina sono applicati sul volume di <strong><span id="info-succo-confezionare" style="color:var(--success); font-size:1.2rem; font-weight:bold;">0</span> litri netti</strong>.</p>
-            </div>
+function toggleGroup(header){
+  header.classList.toggle('open');
+  const id = header.parentElement.querySelector('.nav-group-items').id;
+  document.getElementById(id)?.classList.toggle('open');
+}
 
-            <div class="grid-2">
-                <div class="card">
-                    <h3>A. Macchina Confezionatrice</h3>
-                    <div class="input-group vertical">
-                        <label>Impianto di Riempimento:</label>
-                        <select id="sel-impianto-conf" style="width: 100%;" onchange="aggiornaTutto()">
-                            <option value="nessuno">Nessuno (Carico sfuso in Cisterna/Tanker)</option>
-                            <option value="galdi">Impianto Galdi-Goglio</option>
-                            <option value="acma">Impianto ACMA</option>
-                            <option value="magnoni">Impianto Magnoni</option>
-                        </select>
-                    </div>
-                    <div class="input-group">
-                        <label>Velocità Impianto (Unità/ora):</label>
-                        <input type="number" id="inp-vel-impianto" value="150" oninput="aggiornaTutto()">
-                    </div>
-                    <div class="input-group">
-                        <label>Operatori alla Macchina:</label>
-                        <input type="number" id="inp-addetti-conf" value="2" oninput="aggiornaTutto()">
-                    </div>
-                </div>
+// ═══════════════════════════════════════════════════════════════
+// POPOLA INPUTS DAL FILE XLSX
+// estrae i valori BLU (input modificabili) dai fogli caricati
+// ═══════════════════════════════════════════════════════════════
+function getCellVal(sheetName, addr){
+  if(!CELL_DATA[sheetName]) return null;
+  const cell = CELL_DATA[sheetName][addr];
+  return cell ? cell.v : null;
+}
 
-                <div class="card">
-                    <h3>B. Formato e Materiali</h3>
-                    <div class="input-group vertical">
-                        <label>Formato Imballaggio Selezionato:</label>
-                        <select id="sel-formato-pack" style="width: 100%;" onchange="aggiornaTutto()">
-                            <option value="fusti_190">Fusti Metallo 190kg</option>
-                            <option value="fusti_220">Fusti Metallo 220kg</option>
-                            <option value="bins_1000">Bins Plastica 1000kg</option>
-                            <option value="tanker">Sfuso in Cisterna (Tanker 30.000lt)</option>
-                            <option value="vaschette_14">Vaschette 14kg</option>
-                            <option value="secchielli_20">Secchielli 20kg</option>
-                            <option value="buste_surg_500">Buste Surgelate 500gr (Cartoni)</option>
-                        </select>
-                    </div>
-                    
-                    <div class="result-box" style="flex-direction: column; background:#fff3e0; border-left-color: var(--primary);">
-                        <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-                            <span>Unità Totali Necessarie:</span>
-                            <span id="out-unita-pack" class="badge" style="font-size: 1.1rem; background: var(--primary);">0</span>
-                        </div>
-                        <div style="display:flex; justify-content:space-between; font-weight:normal; font-size:0.9rem;">
-                            <span>Costo Materiale (Per singola unità):</span>
-                            <span id="out-costo-singolo-pack">€ 0.00</span>
-                        </div>
-                        <div style="display:flex; justify-content:space-between; font-weight:bold; margin-top:10px; padding-top:10px; border-top:1px solid #ffd0a0;">
-                            <span>Costo Totale Materiali Vuoti:</span>
-                            <span id="out-costo-materiali" style="color:var(--danger); font-size:1.1rem;">€ 0.00</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="result-box total">
-                <span>TOTALE COSTI DIRETTI FASE 3 (Macchina + Materiali):</span>
-                <span id="out-tot-fase3" class="highlight">€ 0.00</span>
-            </div>
-        </div>
+function populateInputsFromXLSX(){
+  // Mappa: id_input → { sheet, cell }
+  const MAP = {
+    // Dashboard Trasf
+    't-kg':            {s:'DASHBOARD TRASF.', c:'B5'},
+    // Costi unitari — personale
+    'cu-p1':           {s:'Costi unitari', c:'B3'},
+    'cu-p2':           {s:'Costi unitari', c:'B4'},
+    'cu-p3':           {s:'Costi unitari', c:'B5'},
+    'cu-p4':           {s:'Costi unitari', c:'B6'},
+    'cu-p5':           {s:'Costi unitari', c:'B7'},
+    'cu-p6':           {s:'Costi unitari', c:'B8'},
+    'cu-p9':           {s:'Costi unitari', c:'B11'},
+    'cu-pch':          {s:'Costi unitari', c:'B12'},
+    'cu-ppa':          {s:'Costi unitari', c:'B13'},
+    'cu-pdi':          {s:'Costi unitari', c:'B14'},
+    'cu-pmi':          {s:'Costi unitari', c:'B15'},
+    'cu-pco':          {s:'Costi unitari', c:'B16'},
+    'cu-pcf':          {s:'Costi unitari', c:'B17'},
+    'cu-pma':          {s:'Costi unitari', c:'B18'},
+    'cu-kwh':          {s:'Costi unitari', c:'B22'},
+    'cu-vap':          {s:'Costi unitari', c:'B26'},
+    // Costi unitari — imballaggi (riga 31+ = pedane, 39+ = contenitori)
+    'cu-ped80':        {s:'Costi unitari', c:'B31'},
+    'cu-ped100':       {s:'Costi unitari', c:'B32'},
+    'cu-pedus':        {s:'Costi unitari', c:'B33'},
+    'cu-ped120':       {s:'Costi unitari', c:'B34'},
+    'cu-pedug':        {s:'Costi unitari', c:'B35'},
+    'cu-pedff':        {s:'Costi unitari', c:'B36'},
+    'cu-cart500':      {s:'Costi unitari', c:'B39'},
+    'cu-busta500':     {s:'Costi unitari', c:'B40'},
+    'cu-rex-lim':      {s:'Costi unitari', c:'B41'},
+    'cu-rex-ara':      {s:'Costi unitari', c:'B42'},
+    'cu-rex-ber':      {s:'Costi unitari', c:'B43'},
+    'cu-rex-man':      {s:'Costi unitari', c:'B44'},
+    'cu-crex-man':     {s:'Costi unitari', c:'B46'},
+    'cu-crex-pom':     {s:'Costi unitari', c:'B47'},
+    'cu-crex-lim':     {s:'Costi unitari', c:'B48'},
+    'cu-gog':          {s:'Costi unitari', c:'B49'},
+    'cu-cgog':         {s:'Costi unitari', c:'B50'},
+    'cu-vasch':        {s:'Costi unitari', c:'B51'},
+    'cu-cop':          {s:'Costi unitari', c:'B52'},
+    'cu-latta':        {s:'Costi unitari', c:'B53'},
+    'cu-pet':          {s:'Costi unitari', c:'B54'},
+    'cu-petleg':       {s:'Costi unitari', c:'B55'},
+    'cu-petmez':       {s:'Costi unitari', c:'B56'},
+    'cu-kart':         {s:'Costi unitari', c:'B57'},
+    'cu-ibc':          {s:'Costi unitari', c:'B58'},
+    'cu-str':          {s:'Costi unitari', c:'B62'},
+    'cu-strped':       {s:'Costi unitari', c:'B63'},
+    'cu-sblu':         {s:'Costi unitari', c:'B64'},
+    'cu-fusto':        {s:'Costi unitari', c:'B68'},
+    'cu-fbl':          {s:'Costi unitari', c:'B69'},
+    // Param. Rese
+    'p-vol':           {s:'DASHBOARD PROCESSI', c:'D1'},
+  };
 
-        <div id="fase4_grand_total" class="view-section">
-            <div class="card">
-                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--bg-color); padding-bottom: 15px; margin-bottom: 20px;">
-                    <h2 style="border:none; padding:0; margin:0; font-size:1.5rem;">📊 DISTINTA BASE DI PRODUZIONE</h2>
-                    <div style="display: flex; gap: 10px;">
-                        <button class="btn-export btn-pdf" onclick="window.print()">🖨️ Stampa PDF</button>
-                        <button class="btn-export btn-csv" onclick="esportaCSV()">📥 Esporta Excel</button>
-                    </div>
-                </div>
-                
-                <table style="font-size: 1rem;">
-                    <thead>
-                        <tr>
-                            <th>Macro-Area di Costo</th>
-                            <th style="text-align:right;">Importo (€)</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><strong>1. Fase Estrazione e Processi Termici</strong><br><span style="font-size:0.85rem; color:#666;">Include Scarico, Linea, Centrifughe, Processo, Lavaggi, Vapore.</span></td>
-                            <td class="numero" id="riep-fase1" style="vertical-align: middle;">€ 0.00</td>
-                        </tr>
-                        <tr>
-                            <td><strong>2. Catena del Freddo e Stoccaggio</strong><br><span style="font-size:0.85rem; color:#666;">Include Chiller di abbattimento e Mantenimento Cella.</span></td>
-                            <td class="numero" id="riep-freddo" style="vertical-align: middle;">€ 0.00</td>
-                        </tr>
-                        <tr>
-                            <td><strong>3. Macchina Confezionatrice</strong><br><span style="font-size:0.85rem; color:#666;">Include Energia e Personale addetto all'impianto di riempimento.</span></td>
-                            <td class="numero" id="riep-macchina" style="vertical-align: middle;">€ 0.00</td>
-                        </tr>
-                        <tr>
-                            <td><strong>4. Costo Fisico Materiali Imballaggio</strong><br><span style="font-size:0.85rem; color:#666;">Fusti, Bins, Vaschette, Pedane, Sacchetti asettici, ecc.</span></td>
-                            <td class="numero" id="riep-materiali" style="vertical-align: middle;">€ 0.00</td>
-                        </tr>
-                    </tbody>
-                </table>
+  // Nota: gli input come t-kg, cu-p1 ecc. non esistono ancora nel DOM (le pagine
+  // vengono create da navigateTo). Li memorizziamo e li applicheremo dopo.
+  // Gli input che già esistono (cu-* sono nella pagina d-cu) verranno applicati quando
+  // quella pagina sarà visitata. Per ora salviamo tutto in pendingValues.
+  window._pendingXLSX = {};
+  Object.entries(MAP).forEach(([id, {s, c}]) => {
+    const val = getCellVal(s, c);
+    if(val != null && val !== '') {
+      window._pendingXLSX[id] = val;
+    }
+  });
+  // Applica subito quelli già nel DOM (nessuno al momento del caricamento)
+  applyPendingValues();
+}
 
-                <div class="result-box total" style="margin-top:25px; padding: 20px;">
-                    <span style="font-size: 1.3rem;">COSTO TOTALE SESSIONE:</span>
-                    <span id="riep-totale-assoluto" class="highlight" style="font-size: 1.5rem;">€ 0.00</span>
-                </div>
-                
-                <div class="grid-2" style="margin-top: 20px;">
-                    <div class="result-box" style="flex-direction: column; align-items: center; text-align:center;">
-                        <span style="font-size:0.95rem; color: #555;">Incidenza Industriale per Kg</span>
-                        <span style="font-size:0.85rem; color: #888;">(Riferito alla Frutta Grezza Entrante)</span>
-                        <span id="riep-kg-frutta" style="font-size:1.8rem; color:var(--primary); margin-top:10px; font-weight:900;">€ 0.00</span>
-                    </div>
-                    <div class="result-box" style="border-left-color: var(--success); flex-direction: column; align-items: center; text-align:center; background:#e8f5e9;">
-                        <span style="font-size:0.95rem; color: #555;">Costo Finito per Litro Imballato</span>
-                        <span style="font-size:0.85rem; color: #888;">(Riferito al Succo Netto Residuo)</span>
-                        <span id="riep-lt-finito" style="font-size:1.8rem; color:var(--success); margin-top:10px; font-weight:900;">€ 0.00</span>
-                    </div>
-                </div>
-            </div>
-        </div>
+function applyPendingValues(){
+  if(!window._pendingXLSX) return;
+  Object.entries(window._pendingXLSX).forEach(([id, val]) => {
+    const el = document.getElementById(id);
+    if(el && (el.tagName==='INPUT'||el.tagName==='SELECT')) {
+      el.value = val;
+      delete window._pendingXLSX[id];
+    }
+  });
+}
 
-        <div id="parametri" class="view-section">
-            <div class="card">
-                <h2>⚙️ Costi Unitari Master (Parametri Globali)</h2>
-                <p>Questi parametri influenzano tutti i calcoli dell'intera applicazione. Modificali in base alle tariffe correnti.</p>
-                
-                <div style="max-width: 500px; margin-top: 20px;">
-                    <div class="input-group">
-                        <label><strong>Costo Energia Elettrica</strong> (€/kWh)</label>
-                        <input type="number" step="0.01" id="inp-tariffa-en" value="0.21" oninput="aggiornaTutto()">
-                    </div>
-                    <div class="input-group">
-                        <label><strong>Costo Personale Base</strong> (€/h per operatore)</label>
-                        <input type="number" id="inp-costo-pers" value="30.00" step="0.5" oninput="aggiornaTutto()">
-                    </div>
-                    <div class="input-group">
-                        <label><strong>Costo Vapore Industriale</strong> (€/kg)</label>
-                        <input type="number" step="0.001" id="inp-tariffa-vap" value="0.055" oninput="aggiornaTutto()">
-                    </div>
-                </div>
-            </div>
-        </div>
+// ═══════════════════════════════════════════════════════════════
+// NAVIGAZIONE
+// ═══════════════════════════════════════════════════════════════
+function navigateTo(pageId){
+  currentPage = pageId;
+  // aggiorna nav
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('nav-'+pageId)?.classList.add('active');
+  // trova item
+  let item = null;
+  for(const g of NAV_GROUPS) {
+    item = g.items.find(i=>i.id===pageId);
+    if(item) break;
+  }
+  if(!item) return;
+  // breadcrumb
+  document.getElementById('topbar-title').textContent = item.label;
+  document.getElementById('topbar-bc').innerHTML = `PRISMA <span style="opacity:.4">›</span> <span class="cur">${item.label}</span>`;
+  // mostra pagina
+  document.getElementById('page-welcome').style.display='none';
+  renderPage(pageId, item);
+  // scroll top
+  document.querySelector('.content-area').scrollTop = 0;
+}
 
+// ═══════════════════════════════════════════════════════════════
+// RENDER PAGINE
+// ═══════════════════════════════════════════════════════════════
+function renderPage(pageId, item){
+  const container = document.getElementById('pages-container');
+  // nascondi tutte le pagine esistenti
+  container.querySelectorAll('.dyn-page').forEach(p => p.style.display='none');
+
+  let existing = document.getElementById('page-'+pageId);
+  if(!existing){
+    // crea nuova pagina
+    const div = document.createElement('div');
+    div.id = 'page-'+pageId;
+    div.className = 'page active dyn-page';
+    div.innerHTML = buildPageHTML(pageId, item);
+    container.appendChild(div);
+  } else {
+    existing.style.display = 'block';
+  }
+  // per dash-proc: ricostruisce sempre la tabella toggle (contiene gli stati correnti)
+  if(pageId === 'dash-proc') buildProcTable();
+  // applica valori dal file XLSX (se ancora in attesa)
+  applyPendingValues();
+  // (ri)esegui sempre i calcoli per questa pagina dopo che il DOM è pronto
+  setTimeout(() => initPageCharts(pageId), 80);
+}
+
+function buildPageHTML(pageId, item){
+  // Dashboard principali: HTML dedicato
+  if(pageId==='dash-trasf')  return buildDashTrasf();
+  if(pageId==='dash-proc')   return buildDashProc();
+  if(pageId==='dash-imb')    return buildDashImb();
+  if(pageId==='d-cu')        return buildCostiUnitari();
+  if(pageId==='d-mix')       return buildMixPrezzi();
+  // Tutti gli altri: tabella raw + possibilità input BLU
+  return buildRawSheet(pageId, item);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// RAW SHEET VIEWER (fogli parametri, impianti, liste)
+// ═══════════════════════════════════════════════════════════════
+function buildRawSheet(pageId, item){
+  const sheetName = item.sheet;
+  const rows = SHEETS[sheetName];
+  if(!rows || rows.length===0) return `<div class="page"><div class="ey">Foglio</div><h1 class="ptit">${item.label}</h1><div class="nb2"><strong>ℹ️</strong> Foglio non trovato nel file caricato.</div></div>`;
+
+  // trova prima riga con dati significativi come header
+  let hdrIdx = 0;
+  for(let i=0;i<Math.min(5,rows.length);i++){
+    if(rows[i].filter(c=>c!==''&&c!=null).length > 2){ hdrIdx=i; break; }
+  }
+  const hdrs = rows[hdrIdx];
+  const dataRows = rows.slice(hdrIdx+1).filter(r=>r.some(c=>c!==''&&c!=null));
+
+  // Identifica celle BLU cercando pattern "BLU" nelle prime righe
+  const hasBluNote = rows.slice(0,3).some(r=>r.some(c=>String(c).toLowerCase().includes('blu')));
+
+  let html = `
+    <div class="ey">${item.icon} Foglio Excel</div>
+    <h1 class="ptit">${item.label}</h1>
+    <p class="psub">Foglio: <code style="background:var(--bg3);padding:2px 6px;border-radius:4px;font-size:11px">${sheetName}</code> — ${dataRows.length} righe × ${hdrs.length} colonne</p>`;
+
+  if(hasBluNote){
+    html += `<div class="nb2 nb-warn"><strong>✏️ Valori BLU:</strong> Le celle in arancione sono input modificabili che si propagano automaticamente alle Dashboard collegate.</div>`;
+  }
+
+  html += `<div class="raw-table-wrap"><div class="raw-table-scroll"><table class="raw-table"><thead><tr>`;
+  html += `<th>#</th>`;
+  hdrs.forEach((h,i) => {
+    const label = h!==''&&h!=null ? String(h).substring(0,40) : `Col ${i+1}`;
+    html += `<th title="${String(h)}">${label}</th>`;
+  });
+  html += `</tr></thead><tbody>`;
+
+  dataRows.slice(0, 200).forEach((row, ri) => {
+    html += `<tr>`;
+    html += `<td class="cell-num" style="color:var(--txt3);width:32px">${ri+1}</td>`;
+    hdrs.forEach((_, ci) => {
+      const val = row[ci];
+      const isNum = val !== '' && val != null && !isNaN(+val) && val !== '';
+      const isEmpty = val === '' || val == null;
+      const isLabel = !isNum && !isEmpty;
+      let cls = '';
+      if(isNum) cls = 'cell-num';
+      const display = isEmpty ? '' : isNum ? fmt(+val, String(val).includes('.') ? 4 : 0) : String(val).substring(0,80);
+      html += `<td class="${cls}" title="${isEmpty?'':String(val)}">${display}</td>`;
+    });
+    html += `</tr>`;
+  });
+  if(dataRows.length > 200){
+    html += `<tr><td colspan="${hdrs.length+1}" style="text-align:center;padding:12px;color:var(--txt3);font-size:11px">... ${dataRows.length-200} righe nascoste — tutti i dati sono in memoria</td></tr>`;
+  }
+  html += `</tbody></table></div></div>`;
+  html += `<div class="pf"><span>PRISMA · ${item.label}</span><span>Fonte: ${sheetName} · ${dataRows.length} righe</span></div>`;
+  return html;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// DATI STATICI (logica di calcolo identica al file corrente)
+// ═══════════════════════════════════════════════════════════════
+const SCARICO = {
+  'Rinfusa':          {kw:6.95,  add:1, portata:20000},
+  'Bins+Coccodrillo': {kw:24.6,  add:2, portata:10000},
+  'Bins+Magnoni':     {kw:6.64,  add:1, portata:5000}
+};
+const LINEE_PREP = {
+  'A':{kw:3.14,add:1,portata:7000},'B':{kw:3.14,add:1,portata:7000},
+  'C':{kw:3.14,add:1,portata:7000},'D':{kw:5.1,add:1,portata:7000}
+};
+const LINEE_TRASF = {
+  'B/SF':        {kw:114.4,add:2,portata:7000,cent:'2pr+1 sec',ckw:55,cadd:0},
+  'BOE+1100':    {kw:80,add:2,portata:6000,cent:'1pr+1sec',ckw:23.5,cadd:0},
+  'BOE+POLY':    {kw:80,add:2,portata:6000,cent:'1pr+1sec',ckw:23.5,cadd:0},
+  'BOE+POLY GOE':{kw:80,add:2,portata:5000,cent:'1pr+1sec',ckw:23.5,cadd:0},
+  'GOE EST+POLY':{kw:70,add:2,portata:5000,cent:'1pr+1sec',ckw:23.5,cadd:0},
+  'GOE EST+400': {kw:65,add:2,portata:5000,cent:'1pr+1sec',ckw:23.5,cadd:0},
+  'GOE INT+POLY':{kw:70,add:2,portata:5000,cent:'1pr+1sec',ckw:23.5,cadd:0},
+  'TORCHI FASO': {kw:90,add:3,portata:4000,cent:'3pr+1sec',ckw:72,cadd:0},
+  '400':         {kw:50,add:1,portata:6000,cent:'—',ckw:0,cadd:0}
+};
+const RAFF_SUCCO={kw:19.2,portata:2240};
+const RAFF_TORCH={kw:11,portata:700};
+const COMPAT_LINEE={
+  'Limone':    ['B/SF','BOE+1100','BOE+POLY','BOE+POLY GOE','GOE EST+POLY','GOE EST+400','GOE INT+POLY','TORCHI FASO'],
+  'Mandarino': ['BOE+1100','BOE+POLY','BOE+POLY GOE','GOE EST+POLY','GOE EST+400','GOE INT+POLY','TORCHI FASO'],
+  'Arancia':   ['GOE EST+400','GOE EST+POLY','400'],
+  'Bergamotto':['BOE+1100','BOE+POLY','GOE EST+400','GOE INT+POLY','400']
+};
+const COMPAT_PKG={
+  'Limone':{
+    'B/SF':        ['acma','goglio','rex','fbl','ff190','vasch','latte','ff190std'],
+    'BOE+1100':    ['acma','goglio','rex','fbl','ff190','vasch','latte'],
+    'BOE+POLY':    ['acma','goglio','fbl','ff190','vasch','latte'],
+    'BOE+POLY GOE':['fbl','ff190','vasch','latte'],
+    'GOE EST+POLY':['fbl','ff190','vasch','latte'],
+    'GOE EST+400': ['fbl','ff190','vasch','latte'],
+    'GOE INT+POLY':['fbl','ff190','vasch','latte'],
+    'TORCHI FASO': ['fbl','ff190']
+  },
+  'Mandarino':{
+    'BOE+1100':['goglio','rex','vasch','latte','ff190'],
+    'BOE+POLY':['vasch','latte','ff190'],
+    'BOE+POLY GOE':['vasch','latte','ff190'],
+    'GOE EST+POLY':['vasch','latte','ff190'],
+    'GOE EST+400': ['vasch','latte','ff190'],
+    'GOE INT+POLY':['vasch','latte','ff190'],
+    'TORCHI FASO': ['fbl','ff190']
+  },
+  'Arancia':{
+    'GOE EST+400': ['rex','ff190std'],
+    'GOE EST+POLY':['ff190std'],
+    '400':['ff190std']
+  },
+  'Bergamotto':{
+    'BOE+1100':['ff190'],'BOE+POLY':['ff190'],
+    'GOE EST+400':['ff190'],'GOE INT+POLY':['ff190'],'400':['ff190']
+  }
+};
+const PROC_SEL_OPTS={
+  disol:{'Distill. Pilato':{portata:1200,kw:11.5,vap:true,vapKgH:375,resa:0.999,pFissa:500},'Distill. Santoro':{portata:4200,kw:55.94,vap:true,vapKgH:1500,resa:0.999,pFissa:500},'Distill. Joe':{portata:3000,kw:24.752,vap:true,vapKgH:1300,resa:0.999,pFissa:500}},
+  chiar:{'SA-100':{portata:5000,kw:26.5,vap:false,vapKgH:0,resa:0.92,pFissa:0}},
+  past:{'3000 lt/h':{portata:3000,kw:20.7,vap:true,vapKgH:300,resa:0.999,pFissa:200},'8000 lt/h':{portata:8000,kw:29.87,vap:true,vapKgH:500,resa:0.999,pFissa:200}},
+  dpad:{'FZ per cisterna':{portata:5000,kw:25,vap:false,vapKgH:0,resa:0.997,pFissa:300}},
+  micro:{'CMF (standard)':{portata:5000,kw:40,vap:false,vapKgH:0,resa:0.998,pFissa:2500}},
+  conc:{'BX 50':{portata:4200,kw:80,vap:true,vapKgH:800,resa:0.16,pFissa:300},'BX 60':{portata:3500,kw:80,vap:true,vapKgH:900,resa:0.133,pFissa:300},'BX 65':{portata:3000,kw:80,vap:true,vapKgH:950,resa:0.123,pFissa:300}},
+  stocc:{'Serb. Azzini':{portata:5000,kw:0,vap:false,vapKgH:0,resa:1.0,pFissa:0}},
+  conf:{'Galdi (Rex 500gr)':{portata:1600,kw:21.95,vap:false,vapKgH:0,resa:0.999,pFissa:100},'Goglio (Buste 3kg)':{portata:1500,kw:19.8,vap:false,vapKgH:0,resa:0.999,pFissa:100},'ACMA (500gr surg)':{portata:2000,kw:24.5,vap:false,vapKgH:0,resa:0.999,pFissa:100},'Magnoni':{portata:960,kw:8.25,vap:false,vapKgH:0,resa:0.999,pFissa:100}},
+  scell:{'Serb. Azzini':{portata:5000,kw:0,vap:false,vapKgH:0,resa:1.0,pFissa:0}},
+  cist:{'Serb. Azzini':{portata:10000,kw:7.5,vap:false,vapKgH:0,resa:1.0,pFissa:0},'Cisternetta provv.':{portata:18000,kw:4.3,vap:false,vapKgH:0,resa:1.0,pFissa:0}}
+};
+let procSel={};
+Object.keys(PROC_SEL_OPTS).forEach(id=>{procSel[id]=Object.keys(PROC_SEL_OPTS[id])[0];});
+const PROC_DEF=[
+  {id:'disol',nome:'Disoleazione (Santoro/Joe)',add:1,addKey:'cu-pdi'},
+  {id:'chiar',nome:'Chiarificazione',add:1,addKey:'cu-pch'},
+  {id:'past',nome:'Pastorizzazione',add:1,addKey:'cu-ppa'},
+  {id:'dpad',nome:'Disoleazione Padovan',add:1,addKey:'cu-pdi'},
+  {id:'micro',nome:'Microfiltrazione',add:1,addKey:'cu-pmi'},
+  {id:'conc',nome:'Concentrazione',add:1,addKey:'cu-pco'},
+  {id:'stocc',nome:'Stoccaggio serbatoio',add:0,addKey:'cu-pma'},
+  {id:'conf',nome:'Confezionamento',add:2,addKey:'cu-pcf'},
+  {id:'scell',nome:'Stoccaggio in cella',add:0,addKey:'cu-pma'},
+  {id:'cist',nome:'Carico cisterna',add:1,addKey:'cu-pma'}
+];
+let procStato={disol:true,chiar:false,past:false,dpad:false,micro:false,conc:false,stocc:false,conf:false,scell:false,cist:false};
+function getProcParams(id){return PROC_SEL_OPTS[id][procSel[id]]||Object.values(PROC_SEL_OPTS[id])[0];}
+function getRexKey(agr){const m={Limone:'cu-rex-lim',Arancia:'cu-rex-ara',Bergamotto:'cu-rex-ber',Mandarino:'cu-rex-man'};return m[agr]||'cu-rex-lim';}
+function getCartRexKey(agr){const m={Limone:'cu-crex-lim',Mandarino:'cu-crex-man',Arancia:'cu-crex-pom',Bergamotto:'cu-crex-pom'};return m[agr]||'cu-crex-lim';}
+const PKG_DATA={
+  acma:    {nome:'Buste 500gr Surg.',imp:'ACMA',peso:0.5,comp:[{n:'Bustina 500gr PE',q:1,k:'cu-busta500'},{n:'Cartone 24 buste',q:0.0417,k:'cu-cart500'},{n:'Stretch foil x ped.',q:0.00208,k:'cu-strped'},{n:'Pedana 80×120 us.',q:0.00208,k:'cu-pedus'}]},
+  rex:     {nome:'Rex 500gr brick',imp:'Galdi',peso:0.5,comp:[{n:'REX 500gr (agrume)',q:1,k:'_rex_dynamic'},{n:'Cartone Rex',q:0.05,k:'_crex_dynamic'},{n:'Pedana 80×120 us.',q:0.00208,k:'cu-pedus'}]},
+  goglio:  {nome:'Buste Goglio 3kg',imp:'Goglio',peso:3,comp:[{n:'Busta Goglio 3kg',q:1,k:'cu-gog'},{n:'Cartone Goglio 3kg',q:0.25,k:'cu-cgog'},{n:'Pedana 80×120 us.',q:0.00694,k:'cu-pedus'}]},
+  vasch:   {nome:'Vaschette 14kg',imp:'Magnoni',peso:14,comp:[{n:'Vaschetta 14kg',q:1,k:'cu-vasch'},{n:'Coperchio vasch.',q:1,k:'cu-cop'},{n:'Pedana us. gen.',q:0.04,k:'cu-pedug'},{n:'Stretch foil x ped.',q:0.04,k:'cu-strped'}]},
+  latte:   {nome:'Latte 20kg',imp:'Magnoni',peso:20,comp:[{n:'Latta 20kg',q:1,k:'cu-latta'},{n:'Sacch. blu piccolo',q:1,k:'cu-sblu'},{n:'Pedana us. gen.',q:0.025,k:'cu-pedug'}]},
+  fbl:     {nome:'Fusti FBL 170kg',imp:'Magnoni',peso:170,comp:[{n:'FBL usato',q:1,k:'cu-fbl'},{n:'Sacch. PET blu',q:2,k:'cu-pet'},{n:'Stretch foil kg',q:0.045,k:'cu-str'},{n:'Pedana 100×120 us.',q:0.25,k:'cu-pedus'}]},
+  ff190:   {nome:'F.F. 190kg Provv.',imp:'Magnoni',peso:190,comp:[{n:'Fusto ferro usato',q:1,k:'cu-fusto'},{n:'Sacch. PET blu',q:2,k:'cu-pet'},{n:'Stretch foil kg',q:0.045,k:'cu-str'},{n:'Pedana 100×120 us.',q:0.25,k:'cu-pedus'}]},
+  ff190std:{nome:'F.F. Std 190kg',imp:'Magnoni',peso:190,comp:[{n:'Fusto ferro usato',q:1,k:'cu-fusto'},{n:'Sacch. PET blu',q:2,k:'cu-pet'},{n:'Stretch foil kg',q:0.045,k:'cu-str'},{n:'Pedana F.F. Std nu.',q:0.25,k:'cu-pedff'}]}
+};
+function getPkgCosto(k,agr){
+  const a=agr||gs('t-agrume')||'Limone';
+  return (PKG_DATA[k]?.comp||[]).reduce((s,c)=>{
+    let key=c.k;
+    if(key==='_rex_dynamic') key=getRexKey(a);
+    if(key==='_crex_dynamic') key=getCartRexKey(a);
+    return s+c.q*(CU(key)||0);
+  },0);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CHARTS REGISTRY
+// ═══════════════════════════════════════════════════════════════
+const CH={};
+Chart.defaults.color='#6a7290';
+Chart.defaults.font.family="'DM Sans',sans-serif";
+Chart.defaults.font.size=11;
+const GRID={color:'rgba(46,52,72,0.8)',drawBorder:false};
+const TIP={backgroundColor:'#1e2230',borderColor:'#3a4060',borderWidth:1,titleColor:'#e8eaf2',bodyColor:'#a0a8c0',padding:10};
+const COLS=['rgba(232,164,74,.85)','rgba(91,156,246,.85)','rgba(78,203,140,.85)','rgba(242,112,112,.85)','rgba(106,114,144,.6)','rgba(192,120,32,.85)'];
+function mkChart(id,type,data,opts){
+  if(CH[id]){try{CH[id].destroy();}catch(e){}}
+  const canvas=document.getElementById(id);
+  if(!canvas) return;
+  CH[id]=new Chart(canvas.getContext('2d'),{type,data,options:opts});
+}
+function barOpts(horiz=false){
+  return {
+    responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:TIP},
+    scales:{
+      x:{grid:horiz?GRID:{display:false},ticks:{color:'#6a7290',maxRotation:horiz?0:30}},
+      y:{grid:horiz?{display:false}:GRID,ticks:{color:'#6a7290',callback:v=>typeof v==='number'?v.toLocaleString('it-IT',{minimumFractionDigits:0}):v}}
+    },
+    indexAxis:horiz?'y':'x'
+  };
+}
+function donutOpts(){
+  return {
+    responsive:true,maintainAspectRatio:false,cutout:'58%',
+    plugins:{legend:{position:'right',labels:{color:'#a0a8c0',padding:10,font:{size:10},boxWidth:10}},
+    tooltip:{...TIP,callbacks:{label:ctx=>` ${ctx.label}: ${ctx.parsed.toLocaleString('it-IT',{minimumFractionDigits:2,maximumFractionDigits:2})} €`}}}
+  };
+}
+
+function initPageCharts(pageId){
+  if(pageId==='dash-trasf') { runTrasf(); }
+  else if(pageId==='dash-proc') { runProc(); }
+  else if(pageId==='dash-imb') { runImb(); }
+  else if(pageId==='d-cu') { runCU(); }
+  else if(pageId==='d-mix') { runMix(); }
+  // resize any existing charts so they fit the now-visible container
+  setTimeout(() => Object.values(CH).forEach(c => { try { c.resize(); } catch(e){} }), 80);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// DASHBOARD TRASFORMAZIONE
+// ═══════════════════════════════════════════════════════════════
+function buildDashTrasf(){
+  return `
+<div class="ey">Analisi Costi · Prodotti Agrumari</div>
+<h1 class="ptit">Dashboard Trasformazione</h1>
+<p class="psub">Modifica gli input — tutti i calcoli e i grafici si aggiornano in tempo reale</p>
+
+<div class="ibox">
+  <h4>⚙️ Input Sessione</h4>
+  <div class="g2" style="margin-bottom:0">
+    <div>
+      <div class="irow"><label>Quantità frutta ingresso (kg)</label>
+        <input type="number" id="t-kg" value="100000" min="1000" step="1000" oninput="runAll()">
+        <span class="badge-info" id="t-kg-badge">100.000 kg</span></div>
+      <div class="irow"><label>Tipo agrume</label>
+        <select id="t-agrume" onchange="runAll()">
+          <option value="Limone">🍊 Limone</option>
+          <option value="Mandarino">🍊 Mandarino</option>
+          <option value="Arancia">🍊 Arancia/Pompelmo</option>
+          <option value="Bergamotto">🍊 Bergamotto</option>
+        </select>
+        <span id="t-compat-badge" class="badge-ok">✓ Compatibile</span></div>
+      <div class="irow"><label>Opzione scarico (Fase 3)</label>
+        <select id="t-scarico" onchange="runAll()">
+          <option value="Rinfusa">Rinfusa</option>
+          <option value="Bins+Coccodrillo">Bins + Coccodrillo</option>
+          <option value="Bins+Magnoni" selected>Bins + Magnoni</option>
+        </select></div>
+      <div class="irow"><label>Linea preparazione (Fase 4)</label>
+        <select id="t-linea-prep" onchange="runAll()">
+          <option>A</option><option>B</option><option>C</option><option value="D" selected>D</option>
+        </select></div>
+      <div class="irow"><label>Linea trasformazione (Fase 5)</label>
+        <select id="t-linea-trasf" onchange="runAll()">
+          <option value="B/SF" selected>B/SF</option>
+          <option value="BOE+1100">BOE + 1100</option>
+          <option value="BOE+POLY">BOE + POLY</option>
+          <option value="BOE+POLY GOE">BOE + POLY GOE</option>
+          <option value="GOE EST+POLY">GOE EST + POLY</option>
+          <option value="GOE EST+400">GOE EST + 400</option>
+          <option value="GOE INT+POLY">GOE INT + POLY</option>
+          <option value="TORCHI FASO">TORCHI FASO</option>
+          <option value="400">400</option>
+        </select></div>
     </div>
+    <div>
+      <div class="irow"><label>Resa succo (%)</label><input type="number" id="t-resa-succo" value="32" min="1" max="60" step="0.5" oninput="runAll()"></div>
+      <div class="irow"><label>Resa torchiato (%)</label><input type="number" id="t-resa-torch" value="10" min="0" max="30" step="0.5" oninput="runAll()"></div>
+      <div class="irow"><label>Resa scorze (%)</label><input type="number" id="t-resa-scorze" value="58" min="0" max="80" step="0.5" oninput="runAll()"></div>
+      <div class="irow"><label>Prezzo vendita succo (€/kg)</label><input type="number" id="t-prezzo-succo" value="1.2525" min="0.1" step="0.01" oninput="runAll()"></div>
+      <div class="irow"><label>Prezzo torchiato (€/kg)</label><input type="number" id="t-prezzo-torch" value="0.30" min="0" step="0.01" oninput="runAll()"></div>
+      <div class="irow"><label>Prezzo scorze (€/kg)</label><input type="number" id="t-prezzo-scorze" value="0.006" min="0" step="0.001" oninput="runAll()"></div>
+      <div class="irow"><label>Costo smaltimento (€/ton)</label><input type="number" id="t-smalt" value="180" min="0" step="10" oninput="runAll()"></div>
+      <div class="irow"><label>Manutenzione sessione (€)</label><input type="number" id="t-manut" value="0" min="0" step="50" oninput="runAll()"></div>
+    </div>
+  </div>
+</div>
 
-    <script>
-        // --- GESTIONE NAVIGAZIONE MENU ---
-        function switchView(viewId) {
-            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
-            document.getElementById(viewId).classList.add('active');
-            event.currentTarget.classList.add('active');
-            aggiornaTutto(); // Ricalcola per sicurezza al cambio pagina
-        }
+<div class="kr">
+  <div class="kc a"><div class="kl">Costo Totale Diretto</div><div class="kv" id="k-ctot">—</div><div class="ks" id="k-ctot-s">—</div></div>
+  <div class="kc g"><div class="kl">Ricavo Succo</div><div class="kv" id="k-ricavo">—</div><div class="ks" id="k-ricavo-s">—</div></div>
+  <div class="kc b"><div class="kl">Margine Lordo</div><div class="kv" id="k-margine">—</div><div class="ks" id="k-margine-s">—</div></div>
+  <div class="kc r"><div class="kl">Costo Netto €/lt</div><div class="kv" id="k-netto">—</div><div class="ks" id="k-netto-s">—</div></div>
+</div>
 
-        // --- DATABASE CENTRALE PRISMA ---
-        
-        // 1. Dati Scarico (Kw e Addetti)
-        const dbScarico = { 
-            "rinfusa": { kw: 6.95, addetti: 1 }, 
-            "bins_coccodrillo": { kw: 24.6, addetti: 2 }, 
-            "bins_magnoni": { kw: 6.64, addetti: 1 } 
-        };
-        
-        // 2. Dati Linee (Kw Linea + Kw Centrifughe già sommati)
-        const dbLinee = { 
-            "bsf": { portata: 7000, kwTotali: 169.4, addetti: 1 },          
-            "boe_1100": { portata: 5000, kwTotali: 86.1, addetti: 1 },      
-            "boe_poly": { portata: 5000, kwTotali: 61.7, addetti: 1 },      
-            "boe_poly_goe": { portata: 5000, kwTotali: 46.5, addetti: 1 },  
-            "goe_est_poly": { portata: 5000, kwTotali: 57.8, addetti: 1 },  
-            "goe_est_400": { portata: 5000, kwTotali: 94.0, addetti: 1 },   
-            "goe_int_poly": { portata: 5000, kwTotali: 36.5, addetti: 1 },  
-            "torchi_faso": { portata: 10000, kwTotali: 96.0, addetti: 2 },  
-            "linea_400": { portata: 5000, kwTotali: 59.6, addetti: 1 }      
-        };
+<div class="hl"><div class="hl-ico">⚡</div><div><h3 id="hl-title">Calcolo...</h3><p id="hl-body"></p></div></div>
 
-        // 3. Dati Processi (Kw, Vapore kg/h, Perdita Fisiologica %)
-        const dbProcessi = { 
-            "nessuno": { kw: 0, addetti: 0, vapore: 0, perditaPerc: 0.0 }, 
-            "pastorizzazione": { kw: 29.86, addetti: 1, vapore: 350, perditaPerc: 0.5 }, 
-            "distillazione_joe": { kw: 47.5, addetti: 1, vapore: 1300, perditaPerc: 1.5 },
-            "distillazione_santoro": { kw: 35.0, addetti: 1, vapore: 900, perditaPerc: 1.2 },
-            "distillazione_pilato": { kw: 40.0, addetti: 1, vapore: 1100, perditaPerc: 1.3 },
-            "disoleazione_padovan": { kw: 25.0, addetti: 1, vapore: 0, perditaPerc: 0.8 },
-            "microfiltrazione": { kw: 15.0, addetti: 1, vapore: 0, perditaPerc: 0.2 },
-            "chiarificazione": { kw: 22.0, addetti: 1, vapore: 0, perditaPerc: 1.0 },
-            "concentrazione": { kw: 80.0, addetti: 1, vapore: 1100, perditaPerc: 2.0 }
-        };
+<div class="g2">
+  <div>
+    <div class="stit">Fasi Operative Dirette</div>
+    <div class="tw"><div class="tw-scroll"><table>
+      <thead><tr><th>Fase</th><th>Opzione</th><th style="text-align:right">kW</th><th style="text-align:right">Ore</th><th style="text-align:right">€/h</th><th style="text-align:right">Costo €</th></tr></thead>
+      <tbody id="t-fasi-tbody"></tbody>
+    </table></div></div>
+    <div class="stit">Fasi Indirette (non nel totale diretto)</div>
+    <div class="tw"><table>
+      <thead><tr><th>Fase</th><th style="text-align:right">€/h</th><th style="text-align:right">Costo Sessione</th></tr></thead>
+      <tbody>
+        <tr><td class="lc">1. Acquisto frutta</td><td class="n" id="ti-acq-h">—</td><td class="n"><span class="tag ind" id="ti-acq">—</span></td></tr>
+        <tr><td class="lc">2. Ricezione frutta</td><td class="n" id="ti-ric-h">—</td><td class="n"><span class="tag ind" id="ti-ric">—</span></td></tr>
+        <tr style="background:var(--bg3)"><td class="lc" colspan="2"><strong>Totale indiretti</strong></td><td class="n bv"><strong id="ti-tot">—</strong></td></tr>
+      </tbody>
+    </table></div>
+    <div class="stit">Composizione Costi</div>
+    <div class="ic" id="prog-box"></div>
+  </div>
+  <div>
+    <div class="stit">Rese per Prodotto</div>
+    <div class="tw"><table>
+      <thead><tr><th>Prodotto</th><th style="text-align:right">%</th><th style="text-align:right">kg</th><th style="text-align:right">€/kg</th><th style="text-align:right">Ricavo €</th></tr></thead>
+      <tbody id="t-rese-tbody"></tbody>
+    </table></div>
+    <div class="stit">★ Riepilogo Costo Netto</div>
+    <div class="ic" id="riep-box"></div>
+  </div>
+</div>
 
-        // 4. Dati Freddo
-        const dbFreddo = { 
-            "nessuno": { kw: 0 }, 
-            "chiller_base": { kw: 20 }, 
-            "chiller_potente": { kw: 50 } 
-        };
-        
-        // 5. Macchine Confezionatrici
-        const dbImpiantiConf = { 
-            "nessuno": { kw: 0 }, 
-            "galdi": { kw: 45.5 }, 
-            "acma": { kw: 38.0 }, 
-            "magnoni": { kw: 52.0 } 
-        };
-        
-        // 6. Formati Packaging (Capacità in Kg/Lt e Costo Fisico del materiale unitario)
-        const dbFormatiPack = { 
-            "fusti_190": { capacitaKgLt: 190, costoTot: 31.10 }, 
-            "fusti_220": { capacitaKgLt: 220, costoTot: 34.50 },
-            "bins_1000": { capacitaKgLt: 1000, costoTot: 27.50 }, 
-            "tanker": { capacitaKgLt: 30000, costoTot: 0.00 }, // Lo sfuso non ha costo di imballo a perdere
-            "vaschette_14": { capacitaKgLt: 14, costoTot: 1.35 },
-            "secchielli_20": { capacitaKgLt: 20, costoTot: 2.10 },
-            "buste_surg_500": { capacitaKgLt: 0.5, costoTot: 0.15 }
-        };
+<div class="stit">📊 Grafici Dinamici</div>
+<div class="g3">
+  <div class="ch-wrap"><h4>Composizione Costi Diretti</h4><div style="height:200px;position:relative"><canvas id="ch-t-donut"></canvas></div></div>
+  <div class="ch-wrap"><h4>Costi per Fase (€)</h4><div style="height:200px;position:relative"><canvas id="ch-t-bar"></canvas></div></div>
+  <div class="ch-wrap"><h4>Ricavi vs Costi (€)</h4><div style="height:200px;position:relative"><canvas id="ch-t-wfall"></canvas></div></div>
+</div>
+<div class="pf"><span>PRISMA · Dashboard Trasformazione</span><span>Ricalcolo in tempo reale</span></div>`;
+}
 
-        // --- MOTORE DI CALCOLO PRINCIPALE ---
-        function aggiornaTutto() {
-            // 0. Lettura Parametri Globali e Input
-            let tariffaEn = parseFloat(document.getElementById('inp-tariffa-en').value) || 0;
-            let costoPers = parseFloat(document.getElementById('inp-costo-pers').value) || 0;
-            let tariffaVap = parseFloat(document.getElementById('inp-tariffa-vap').value) || 0;
-            
-            let kgFrutta = parseFloat(document.getElementById('inp-kg-frutta').value) || 0;
-            let ltSuccoLordo = parseFloat(document.getElementById('inp-lt-succo-lordo').value) || 0;
+// ═══════════════════════════════════════════════════════════════
+// CALCOLO TRASFORMAZIONE
+// ═══════════════════════════════════════════════════════════════
+function runTrasf(){
+  const kwh=CU('cu-kwh'); const kg=gv('t-kg')||100000;
+  const scar=SCARICO[gs('t-scarico')]||SCARICO['Bins+Magnoni'];
+  const lprep=LINEE_PREP[gs('t-linea-prep')]||LINEE_PREP['D'];
+  const ltrasf=LINEE_TRASF[gs('t-linea-trasf')]||LINEE_TRASF['B/SF'];
+  const addKey=gs('t-linea-prep')==='D'?'cu-p4':'cu-p3';
+  const ore3=kg/scar.portata, ore4=kg/lprep.portata, ore5=kg/ltrasf.portata;
+  const resaS=(gv('t-resa-succo')||32)/100, resaT=(gv('t-resa-torch')||10)/100, resaSc=(gv('t-resa-scorze')||58)/100;
+  const kgS=kg*resaS, kgT=kg*resaT, kgSc=kg*resaSc, kgSt=kg*0.0009;
+  const ore7=kgS/RAFF_SUCCO.portata, ore8=kgT/RAFF_TORCH.portata;
+  const cH3=scar.kw*kwh+scar.add*CU('cu-p3');
+  const cH4=lprep.kw*kwh+lprep.add*CU(addKey);
+  const cH5=ltrasf.kw*kwh+ltrasf.add*CU('cu-p5');
+  const cH6=ltrasf.ckw*kwh+ltrasf.cadd*CU('cu-p6');
+  const cTot3=cH3*ore3, cTot4=cH4*ore4, cTot5=cH5*ore5;
+  const cTot6=cH6*ore5, cTot7=RAFF_SUCCO.kw*kwh*ore7, cTot8=RAFF_TORCH.kw*kwh*ore8;
+  const cManut=gv('t-manut')||0;
+  const cDir=cTot3+cTot4+cTot5+cTot6+cTot7+cTot8;
+  const cPers=scar.add*CU('cu-p3')*ore3+lprep.add*CU(addKey)*ore4+ltrasf.add*CU('cu-p5')*ore5;
+  const cEn=cDir-cPers;
+  const oreInd=kg/5000;
+  const cH_acq=CU('cu-p1')+2*kwh, cH_ric=CU('cu-p2')+2*kwh;
+  const cTot_acq=cH_acq*oreInd, cTot_ric=cH_ric*oreInd;
+  const pS=gv('t-prezzo-succo')||1.2525, pT=gv('t-prezzo-torch')||0.30, pSc=gv('t-prezzo-scorze')||0.006;
+  const smalt=gv('t-smalt')||180;
+  const ricS=kgS*pS, ricT=kgT*pT, ricSc=kgSc*pSc, cSmalt=kgSt*smalt/1000;
+  const ricSub=ricT+ricSc;
+  const cNetto=cDir-ricSub+cSmalt;
+  const cNettoKg=kgS>0?cNetto/kgS:0, cNettoLt=cNettoKg/1.05;
+  const marg=ricS-cNetto;
 
-            // =====================================
-            // FASE 1: TRASFORMAZIONE E PROCESSI
-            // =====================================
-            let dScarico = dbScarico[document.getElementById('sel-scarico').value];
-            // Stima ore scarico basata su 5000 kg/h standard
-            let costoScarico = ((dScarico.kw * tariffaEn) + (dScarico.addetti * costoPers)) * (kgFrutta / 5000); 
+  // topbar pills
+  const agr=gs('t-agrume');
+  document.getElementById('pill-agrume').style.display='flex';
+  document.getElementById('pill-agr-txt').textContent='🍊 '+agr;
+  document.getElementById('pill-kg').style.display='flex';
+  document.getElementById('pill-kg-txt').textContent='✓ '+fmtK(kg)+' kg';
+  const aBadge=document.getElementById('p-agrume-badge');
+  if(aBadge) aBadge.textContent='🍊 '+agr;
+  const iBadge=document.getElementById('i-agrume-badge');
+  if(iBadge) iBadge.textContent='🍊 '+agr;
 
-            let dLinea = dbLinee[document.getElementById('sel-linea').value];
-            let costoLinea = ((dLinea.kwTotali * tariffaEn) + (dLinea.addetti * costoPers)) * (kgFrutta / dLinea.portata);
+  // compatibilità linea
+  const lineeOk=COMPAT_LINEE[agr]||[];
+  const lineaSel=gs('t-linea-trasf');
+  const compatOk=lineeOk.includes(lineaSel);
+  const selLinea=document.getElementById('t-linea-trasf');
+  if(selLinea) Array.from(selLinea.options).forEach(o=>{
+    const ok=lineeOk.includes(o.value); o.disabled=!ok;
+    o.style.color=ok?'':'var(--red)';
+    o.text=ok?o.value:o.value+' ✗';
+  });
+  const cb=document.getElementById('t-compat-badge');
+  if(cb){cb.className=compatOk?'badge-ok':'badge-warn';cb.textContent=compatOk?'✓ Compatibile':'⚠ Non compatibile';}
+  const kBadge=document.getElementById('t-kg-badge');
+  if(kBadge) kBadge.textContent=fmtK(kg)+' kg';
 
-            let dProc = dbProcessi[document.getElementById('sel-processo').value];
-            // Stima ore processo basata su 3000 lt/h standard
-            let costoProc = ((dProc.kw * tariffaEn) + (dProc.addetti * costoPers) + (dProc.vapore * tariffaVap)) * (ltSuccoLordo / 3000); 
-            
-            let oreLavaggio = parseFloat(document.getElementById('inp-ore-lavaggio').value) || 0;
-            // Stima fissa lavaggio: 15kW e 1 operatore
-            let costoLavaggio = ((15 * tariffaEn) + (1 * costoPers)) * oreLavaggio;
+  // KPI
+  set('k-ctot',fmt(cDir+cManut,0)+'<span class="ku"> €</span>');
+  set('k-ctot-s',fmt(cDir/kg,5)+' €/kg frutta');
+  set('k-ricavo',fmt(ricS,0)+'<span class="ku"> €</span>');
+  set('k-ricavo-s',fmtK(kgS)+' kg × '+fmt(pS,4)+' €/kg');
+  set('k-margine',fmt(marg,0)+'<span class="ku"> €</span>');
+  set('k-margine-s',fmt(marg/kgS,4)+' €/kg succo');
+  set('k-netto',fmt(cNettoLt,5)+'<span class="ku"> €/lt</span>');
+  set('k-netto-s',cNetto<=0?'✓ Costo netto negativo':'Costo netto sul succo');
+  if(ricSub>=cDir){
+    set('hl-title','I ricavi da sottoprodotti coprono interamente il costo di trasformazione');
+    set('hl-body','Sottoprod.: '+fmtE(ricSub,0)+' · Costo diretto: '+fmtE(cDir,0)+' · Costo netto: '+fmtE(cNetto,2));
+  } else {
+    set('hl-title','Costo netto sul succo: '+fmtE(cNetto,2));
+    set('hl-body','Costo diretto: '+fmtE(cDir,0)+' · Ricavi sottoprod.: '+fmtE(ricSub,0)+' · Margine lordo: '+fmtE(marg,0));
+  }
 
-            let TOT_FASE_1 = costoScarico + costoLinea + costoProc + costoLavaggio;
-            
-            // Aggiorna UI Fase 1
-            document.getElementById('out-costo-scarico').innerText = "€ " + costoScarico.toFixed(2);
-            document.getElementById('out-costo-estrazione').innerText = "€ " + costoLinea.toFixed(2);
-            document.getElementById('out-tot-fase1').innerText = "€ " + TOT_FASE_1.toFixed(2);
+  // Tabella fasi
+  const fasi=[
+    {n:'3. Scarico frutta',opt:gs('t-scarico'),kw:scar.kw,ore:ore3,ch:cH3,tot:cTot3},
+    {n:'4. Preparazione frutta',opt:'Linea '+gs('t-linea-prep'),kw:lprep.kw,ore:ore4,ch:cH4,tot:cTot4},
+    {n:'5. Linea trasformazione',opt:gs('t-linea-trasf'),kw:ltrasf.kw,ore:ore5,ch:cH5,tot:cTot5},
+    {n:'6. Centrifugazione olio',opt:ltrasf.cent,kw:ltrasf.ckw,ore:ore5,ch:cH6,tot:cTot6},
+    {n:'7. Raff. stoccaggio succo',opt:'Chiller+Serb.',kw:RAFF_SUCCO.kw,ore:ore7,ch:RAFF_SUCCO.kw*kwh,tot:cTot7},
+    {n:'8. Raff. stoccaggio torch.',opt:'Chiller+Serb.',kw:RAFF_TORCH.kw,ore:ore8,ch:RAFF_TORCH.kw*kwh,tot:cTot8},
+  ];
+  let fHtml=fasi.map(f=>`<tr><td class="lc">${f.n}</td><td><span class="tag y">${f.opt}</span></td>
+    <td class="n">${fmt(f.kw,2)}</td><td class="n">${fmt(f.ore,2)}</td>
+    <td class="n">${fmt(f.ch,2)}</td><td class="n av">${fmt(f.tot,2)}</td></tr>`).join('');
+  fHtml+=`<tr style="background:var(--bg3)"><td class="lc" colspan="5"><strong>TOTALE FASI DIRETTE</strong></td>
+    <td class="n av" style="font-size:14px"><strong>${fmt(cDir,2)}</strong></td></tr>
+    <tr><td class="sl" colspan="5">di cui personale</td><td class="n">${fmt(cPers,2)}</td></tr>
+    <tr><td class="sl" colspan="5">di cui energia</td><td class="n">${fmt(cEn,2)}</td></tr>`;
+  set('t-fasi-tbody',fHtml);
+  set('ti-acq-h',fmt(cH_acq,2)); set('ti-acq',fmt(cTot_acq,2)+' €');
+  set('ti-ric-h',fmt(cH_ric,2)); set('ti-ric',fmt(cTot_ric,2)+' €');
+  set('ti-tot',fmt(cTot_acq+cTot_ric,2)+' €');
 
-            // =====================================
-            // FASE 2: RESE A CASCATA E FREDDO
-            // =====================================
-            // Rese
-            let percPerditaProcesso = dProc.perditaPerc;
-            document.getElementById('info-perc-perdita').innerText = percPerditaProcesso + "%";
-            
-            let litriPersiProcesso = ltSuccoLordo * (percPerditaProcesso / 100);
-            let litriPersiTubi = ltSuccoLordo * 0.005; // 0.5% tubazioni fisse
-            let ltSuccoNetto = ltSuccoLordo - litriPersiProcesso - litriPersiTubi;
-            
-            document.getElementById('out-resa-lordo').innerText = ltSuccoLordo.toFixed(1);
-            document.getElementById('out-resa-perdita').innerText = "- " + litriPersiProcesso.toFixed(1);
-            document.getElementById('out-resa-tubi').innerText = "- " + litriPersiTubi.toFixed(1);
-            document.getElementById('out-resa-netto').innerText = ltSuccoNetto.toFixed(1);
+  // Progress
+  const fv=[cTot5,cTot4,cTot3,cTot6,cTot7+cTot8];
+  const fn=['Linea Trasf.','Preparazione','Scarico','Centrifugazione','Raffreddamento'];
+  const fc=['fa','fb','fg','fr','fd2'];
+  set('prog-box',fn.map((n,i)=>{const p=cDir>0?fv[i]/cDir*100:0;
+    return `<div class="pr"><div class="prh"><span class="prl">${n}</span><span class="prv">${fmt(fv[i],0)} € · ${fmt(p,1)}%</span></div>
+      <div class="prb"><div class="prf ${fc[i]}" style="width:${p}%"></div></div></div>`;
+  }).join(''));
 
-            // Freddo e Cella
-            let dFreddo = dbFreddo[document.getElementById('sel-raffreddamento').value];
-            let oreRaffreddamento = ltSuccoLordo / 3000; // Il chiller lavora alla velocità del processo
-            let costoChiller = (dFreddo.kw * tariffaEn) * oreRaffreddamento;
-            
-            let giorniCella = parseFloat(document.getElementById('inp-giorni-cella').value) || 0;
-            let kwCella = parseFloat(document.getElementById('inp-kw-cella').value) || 0;
-            let costoCella = (kwCella * tariffaEn * 24) * giorniCella; // 24 ore
-            
-            let TOT_FREDDO = costoChiller + costoCella;
-            document.getElementById('out-costo-freddo').innerText = "€ " + TOT_FREDDO.toFixed(2);
+  // Rese
+  set('t-rese-tbody',[
+    {ico:'🍋',n:'Succo',r:resaS*100,kg:kgS,p:pS,ric:ricS,c:'gv'},
+    {ico:'🥤',n:'Torchiato',r:resaT*100,kg:kgT,p:pT,ric:ricT,c:'gv'},
+    {ico:'🟡',n:'Scorze',r:resaSc*100,kg:kgSc,p:pSc,ric:ricSc,c:'gv'},
+    {ico:'🗑️',n:'Scarti',r:0.09,kg:kgSt,p:'—',ric:-cSmalt,c:'rv'},
+  ].map(r=>`<tr><td class="lc">${r.ico} ${r.n}</td><td class="n">${fmt(r.r,2)}%</td>
+    <td class="n">${fmtK(r.kg)}</td>
+    <td class="n">${typeof r.p==='number'?fmt(r.p,4):'—'}</td>
+    <td class="n ${r.c}">${fmt(r.ric,0)}</td></tr>`).join(''));
 
-            // =====================================
-            // FASE 3: CONFEZIONAMENTO E MATERIALI
-            // =====================================
-            document.getElementById('info-succo-confezionare').innerText = ltSuccoNetto.toFixed(0);
-            
-            let dImpianto = dbImpiantiConf[document.getElementById('sel-impianto-conf').value];
-            let dFormato = dbFormatiPack[document.getElementById('sel-formato-pack').value];
-            let velImpianto = parseFloat(document.getElementById('inp-vel-impianto').value) || 1;
-            let addettiConf = parseFloat(document.getElementById('inp-addetti-conf').value) || 0;
-            
-            let unitaNecessarie = Math.ceil(ltSuccoNetto / dFormato.capacitaKgLt);
-            document.getElementById('out-unita-pack').innerText = unitaNecessarie;
-            document.getElementById('out-costo-singolo-pack').innerText = "€ " + dFormato.costoTot.toFixed(2);
-            
-            let oreConfezionamento = 0;
-            let TOT_MACCHINA = 0;
-            if (document.getElementById('sel-impianto-conf').value !== "nessuno") {
-                oreConfezionamento = unitaNecessarie / velImpianto;
-                TOT_MACCHINA = ((dImpianto.kw * tariffaEn) + (addettiConf * costoPers)) * oreConfezionamento;
-            }
-            
-            let TOT_MATERIALI = dFormato.costoTot * unitaNecessarie;
-            let TOT_FASE_3 = TOT_MACCHINA + TOT_MATERIALI;
-            
-            document.getElementById('out-costo-materiali').innerText = "€ " + TOT_MATERIALI.toFixed(2);
-            document.getElementById('out-tot-fase3').innerText = "€ " + TOT_FASE_3.toFixed(2);
+  // Riepilogo
+  set('riep-box',`
+    <div class="ir"><span class="ik">Costo totale trasformazione</span><span class="iv">${fmtE(cDir,2)}</span></div>
+    <div class="ir"><span class="ik">di cui personale</span><span class="iv">${fmtE(cPers,2)}</span></div>
+    <div class="ir"><span class="ik">di cui energia</span><span class="iv">${fmtE(cEn,2)}</span></div>
+    <div class="ir"><span class="ik">Ricavi sottoprodotti</span><span class="iv g">${fmtE(ricSub,2)}</span></div>
+    <div class="ir"><span class="ik">Costo smaltimento</span><span class="iv r">${fmtE(cSmalt,2)}</span></div>
+    <div class="ir sep"><span class="ik" style="font-weight:700;color:var(--txt)">★ COSTO NETTO SUL SUCCO</span><span class="iv ${cNetto<=0?'g':'r'}">${fmtE(cNetto,2)}</span></div>
+    <div class="ir"><span class="ik">★ €/kg succo</span><span class="iv ${cNettoKg<=0?'g':'r'}">${fmt(cNettoKg,5)} €/kg</span></div>
+    <div class="ir"><span class="ik">★ €/lt succo</span><span class="iv ${cNettoLt<=0?'g':'r'}">${fmt(cNettoLt,5)} €/lt</span></div>
+    <div class="ir"><span class="ik">Ricavo succo</span><span class="iv">${fmtE(ricS,2)}</span></div>
+    <div class="ir sep2"><span class="ik" style="font-weight:700;color:var(--acc)">★★ MARGINE LORDO</span><span class="iv a">${fmtE(marg,2)}</span></div>
+    <div class="ir"><span class="ik">Manutenzione</span><span class="iv">${fmtE(cManut,2)}</span></div>
+    <div class="ir"><span class="ik">Costo totale sessione</span><span class="iv a">${fmtE(cDir+cManut,2)}</span></div>`);
 
-            // =====================================
-            // FASE 4: GRAND TOTAL E INCIDENZE
-            // =====================================
-            let GRAND_TOTAL = TOT_FASE_1 + TOT_FREDDO + TOT_MACCHINA + TOT_MATERIALI;
-            
-            document.getElementById('riep-fase1').innerText = "€ " + TOT_FASE_1.toFixed(2);
-            document.getElementById('riep-freddo').innerText = "€ " + TOT_FREDDO.toFixed(2);
-            document.getElementById('riep-macchina').innerText = "€ " + TOT_MACCHINA.toFixed(2);
-            document.getElementById('riep-materiali').innerText = "€ " + TOT_MATERIALI.toFixed(2);
-            
-            document.getElementById('riep-totale-assoluto').innerText = "€ " + GRAND_TOTAL.toFixed(2);
-            
-            // Calcolo Indici: previeni divisione per zero
-            let incidenzaKg = kgFrutta > 0 ? (GRAND_TOTAL / kgFrutta) : 0;
-            let incidenzaLt = ltSuccoNetto > 0 ? (GRAND_TOTAL / ltSuccoNetto) : 0;
-            
-            document.getElementById('riep-kg-frutta').innerText = "€ " + incidenzaKg.toFixed(4);
-            document.getElementById('riep-lt-finito').innerText = "€ " + incidenzaLt.toFixed(4);
-        }
+  // CU impact
+  set('cu-impact-trasf',`
+    <h4>⚙️ Impatto su Trasformazione</h4>
+    <div class="ir"><span class="ik">Costo totale diretto</span><span class="iv a">${fmtE(cDir,2)}</span></div>
+    <div class="ir"><span class="ik">Costo netto €/lt succo</span><span class="iv ${cNettoLt<=0?'g':'r'}">${fmt(cNettoLt,5)} €/lt</span></div>
+    <div class="ir"><span class="ik">Margine lordo succo</span><span class="iv g">${fmtE(marg,2)}</span></div>`);
 
-        // --- FUNZIONE ESPORTAZIONE CSV ---
-        function esportaCSV() {
-            let csvContent = "data:text/csv;charset=utf-8,";
-            
-            csvContent += "=== PRISMA: REPORT DI PRODUZIONE ===\n\n";
-            csvContent += "DATI INGRESSO E RESE,\n";
-            csvContent += `Frutta Lavorata (kg),${document.getElementById('inp-kg-frutta').value}\n`;
-            csvContent += `Succo Lordo Estratto (lt),${document.getElementById('inp-lt-succo-lordo').value}\n`;
-            csvContent += `Succo Netto Confezionato (lt),${document.getElementById('info-succo-confezionare').innerText}\n\n`;
-            
-            csvContent += "RIPARTIZIONE COSTI,\n";
-            csvContent += `Fase 1: Estrazione e Processi,${document.getElementById('riep-fase1').innerText.replace('€ ', '').replace(',', '')}\n`;
-            csvContent += `Fase 2: Freddo e Stoccaggio,${document.getElementById('riep-freddo').innerText.replace('€ ', '').replace(',', '')}\n`;
-            csvContent += `Fase 3: Macchina Confezionatrice,${document.getElementById('riep-macchina').innerText.replace('€ ', '').replace(',', '')}\n`;
-            csvContent += `Fase 3: Materiali Imballaggio Fisico,${document.getElementById('riep-materiali').innerText.replace('€ ', '').replace(',', '')}\n\n`;
-            
-            csvContent += "TOTALI E INCIDENZE,\n";
-            csvContent += `COSTO TOTALE SESSIONE,${document.getElementById('riep-totale-assoluto').innerText.replace('€ ', '').replace(',', '')}\n`;
-            csvContent += `Incidenza su Kg Frutta,${document.getElementById('riep-kg-frutta').innerText.replace('€ ', '').replace(',', '')}\n`;
-            csvContent += `Costo Finito al Litro (Netto),${document.getElementById('riep-lt-finito').innerText.replace('€ ', '').replace(',', '')}\n`;
+  // Grafici
+  mkChart('ch-t-donut','doughnut',{
+    labels:['Linea Trasf.','Preparazione','Scarico','Centrifugazione','Raffreddamento'],
+    datasets:[{data:[cTot5,cTot4,cTot3,cTot6,cTot7+cTot8],backgroundColor:COLS,borderColor:'#1e2230',borderWidth:2,hoverOffset:6}]
+  },donutOpts());
+  mkChart('ch-t-bar','bar',{
+    labels:['Scarico','Prep.','Linea','Centrif.','Raff.S','Raff.T'],
+    datasets:[{data:[cTot3,cTot4,cTot5,cTot6,cTot7,cTot8],
+      backgroundColor:['rgba(78,203,140,.8)','rgba(91,156,246,.8)','rgba(232,164,74,.8)','rgba(242,112,112,.8)','rgba(106,114,144,.5)','rgba(106,114,144,.5)'],
+      borderRadius:5,borderSkipped:false}]
+  },barOpts());
+  mkChart('ch-t-wfall','bar',{
+    labels:['Costo Dir.','Ricavo Succo','Sottoprod.','Smalt.','Margine'],
+    datasets:[{data:[cDir,ricS,ricSub,cSmalt,Math.abs(marg)],
+      backgroundColor:[COLS[3],COLS[2],COLS[2],COLS[0],marg>=0?COLS[2]:COLS[3]],
+      borderRadius:5,borderSkipped:false}]
+  },barOpts());
+}
 
-            var encodedUri = encodeURI(csvContent);
-            var link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", "PRISMA_Report_Costi.csv");
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
+// ═══════════════════════════════════════════════════════════════
+// DASHBOARD PROCESSI
+// ═══════════════════════════════════════════════════════════════
+function buildDashProc(){
+  return `
+<div class="ey">Analisi Processi · Filiera Completa</div>
+<h1 class="ptit">Dashboard Processi</h1>
+<p class="psub">Toggle ON/OFF per ogni processo — la cascata rese si ricalcola in tempo reale</p>
 
-        // Calcola tutto all'avvio dell'applicazione
-        window.onload = aggiornaTutto;
-    </script>
+<div class="ibox">
+  <h4>▶ Input Sessione</h4>
+  <div class="irow"><label>🍊 Agrume</label>
+    <span class="badge-ok" id="p-agrume-badge">🍊 Limone</span>
+    <span style="font-size:11px;color:var(--txt3)">← da Dashboard Trasformazione</span></div>
+  <div class="irow"><label>Volume da lavorare (lt)</label>
+    <input type="number" id="p-vol" value="32000" min="100" step="500" oninput="runAll()">
+    <span class="badge-info" id="p-vol-badge">32.000 lt</span></div>
+</div>
+
+<div class="kr">
+  <div class="kc a"><div class="kl">Volume Trattato</div><div class="kv" id="pk-vol">32.000<span class="ku">lt</span></div></div>
+  <div class="kc g"><div class="kl">Costo Totale Processi</div><div class="kv" id="pk-ctot">—</div><div class="ks" id="pk-ctot-s">—</div></div>
+  <div class="kc b"><div class="kl">Costo Filiera €/lt</div><div class="kv" id="pk-fil">—</div></div>
+  <div class="kc"><div class="kl">Resa Totale Filiera</div><div class="kv" id="pk-resa">—</div><div class="ks" id="pk-resa-s">—</div></div>
+</div>
+
+<div class="nb2"><strong>ℹ️</strong> Il volume di uscita di ogni processo diventa automaticamente il volume di entrata del successivo. I processi su OFF bypassano senza perdite.</div>
+
+<div class="stit">Processi — Attiva/Disattiva + Colonna Q Selezione</div>
+<div class="tw">
+  <div class="tw-head"><h3>Costi per Processo</h3><span id="proc-vol-ref">Rif.: 32.000 lt</span></div>
+  <div class="tw-scroll"><table>
+    <thead><tr><th>On/Off</th><th>Processo</th><th style="text-align:right">Vol. (lt)</th><th style="text-align:right">Portata</th><th style="text-align:right">Ore</th><th style="text-align:right">kW</th><th style="text-align:right">En. €</th><th style="text-align:right">Vap. €</th><th style="text-align:right">Pers. €</th><th style="text-align:right">Tot. €</th><th style="text-align:right">€/lt</th><th>Selezione (Q)</th></tr></thead>
+    <tbody id="proc-tbody"></tbody>
+  </table></div>
+</div>
+
+<div class="g2">
+  <div>
+    <div class="stit">Riepilogo Costi</div>
+    <div class="ic" id="proc-riep-box"></div>
+    <div class="nb2" style="margin-top:14px" id="proc-pkg-note"><strong>📌 Packaging:</strong> —</div>
+  </div>
+  <div>
+    <div class="stit">Cascata Reale — Rese</div>
+    <div class="ic" id="proc-cascata-box"></div>
+  </div>
+</div>
+
+<div class="stit">📊 Grafici Dinamici Processi</div>
+<div class="g2">
+  <div class="ch-wrap"><h4>Costo per Processo Attivo (€)</h4><div style="height:220px;position:relative"><canvas id="ch-p-bar"></canvas></div></div>
+  <div class="ch-wrap"><h4>Cascata Volumi — Entrata vs Uscita (lt)</h4><div style="height:220px;position:relative"><canvas id="ch-p-cascata"></canvas></div></div>
+</div>
+<div class="pf"><span>PRISMA · Dashboard Processi</span><span>Cascata rese in tempo reale</span></div>`;
+}
+
+function buildProcTable(){
+  let html='';
+  PROC_DEF.forEach(p=>{
+    const on=procStato[p.id];
+    const opts=PROC_SEL_OPTS[p.id]; const keys=Object.keys(opts);
+    const selCell=keys.length>1
+      ?`<select id="psel-${p.id}" onchange="procSel['${p.id}']=this.value;runAll()">
+          ${keys.map(k=>`<option value="${k}" ${k===procSel[p.id]?'selected':''}>${k}</option>`).join('')}
+        </select>`
+      :`<span style="font-size:11px;color:var(--txt3)">${keys[0]}</span>`;
+    html+=`<tr id="ptr-${p.id}" style="${on?'':'opacity:.45'}">
+      <td><label class="sw"><input type="checkbox" id="psw-${p.id}" ${on?'checked':''} onchange="toggleProc('${p.id}')"><span class="sl2"></span></label></td>
+      <td class="lc">${p.nome}</td>
+      <td class="n" id="pv-${p.id}">—</td><td class="n" id="pport-${p.id}">—</td>
+      <td class="n" id="po-${p.id}">—</td><td class="n" id="pkw-${p.id}">—</td>
+      <td class="n" id="pen-${p.id}">—</td><td class="n" id="pvap-${p.id}">—</td>
+      <td class="n" id="ppe-${p.id}">—</td><td class="n av" id="ptot-${p.id}">—</td>
+      <td class="n av" id="pelt-${p.id}">—</td><td>${selCell}</td></tr>`;
+  });
+  set('proc-tbody',html);
+}
+
+function toggleProc(id){
+  procStato[id]=!!document.getElementById('psw-'+id)?.checked;
+  const row=document.getElementById('ptr-'+id);
+  if(row) row.style.opacity=procStato[id]?'1':'0.45';
+  runProc();
+}
+
+function runProc(){
+  const kwh=CU('cu-kwh'), vap=CU('cu-vap');
+  const volBase=gv('p-vol')||32000;
+  set('pk-vol',fmtK(volBase)+'<span class="ku">lt</span>');
+  set('p-vol-badge',fmtK(volBase)+' lt');
+  set('proc-vol-ref','Rif.: '+fmtK(volBase)+' lt');
+  let volC=volBase, cTotP=0, cEn=0, cVap=0, cPers=0;
+  const cascata=[];
+  PROC_DEF.forEach(p=>{
+    const on=procStato[p.id]; const pp=getProcParams(p.id); const cAddH=CU(p.addKey);
+    if(on&&volC>0){
+      const ore=volC/pp.portata, cE=pp.kw*kwh*ore, cV=pp.vap?vap*pp.vapKgH*ore:0;
+      const cP=p.add*cAddH*ore, cT=cE+cV+cP;
+      const perd=pp.pFissa+volC*(1-pp.resa), vOut=Math.max(0,volC-perd);
+      set('pv-'+p.id,fmtK(volC)); set('pport-'+p.id,fmtK(pp.portata)+' lt/h');
+      set('po-'+p.id,fmt(ore,2)); set('pkw-'+p.id,fmt(pp.kw,2));
+      set('pen-'+p.id,fmt(cE,2)); set('pvap-'+p.id,pp.vap?fmt(cV,2):'—');
+      set('ppe-'+p.id,fmt(cP,2)); set('ptot-'+p.id,fmt(cT,2));
+      set('pelt-'+p.id,fmt(cT/volBase,5));
+      cTotP+=cT; cEn+=cE; cVap+=cV; cPers+=cP;
+      cascata.push({nome:p.nome,on:true,vIn:volC,perd,vOut,resa:vOut/volC*100,cT});
+      volC=vOut;
+    } else {
+      const pp2=getProcParams(p.id);
+      set('pv-'+p.id,'—'); set('pport-'+p.id,fmtK(pp2.portata)+' lt/h');
+      set('po-'+p.id,'—'); set('pkw-'+p.id,fmt(pp2.kw,2));
+      ['pen','pvap','ppe','ptot','pelt'].forEach(x=>set(x+'-'+p.id,'—'));
+      cascata.push({nome:p.nome,on:false,vIn:0,perd:0,vOut:0,resa:0,cT:0});
+    }
+  });
+  const resaFil=volBase>0?volC/volBase*100:0;
+  set('pk-ctot',fmt(cTotP,2)+'<span class="ku"> €</span>');
+  set('pk-ctot-s',fmt(volBase>0?cTotP/volBase:0,5)+' €/lt');
+  set('pk-fil',fmt(volBase>0?cTotP/volBase:0,5)+'<span class="ku"> €/lt</span>');
+  set('pk-resa',fmt(resaFil,2)+'<span class="ku"> %</span>');
+  set('pk-resa-s',fmtK(volC)+' lt uscita finale');
+  set('proc-riep-box',`
+    <div class="ir"><span class="ik">Costo energia totale</span><span class="iv b">${fmtE(cEn,2)}</span></div>
+    <div class="ir"><span class="ik">Costo vapore totale</span><span class="iv g">${fmtE(cVap,2)}</span></div>
+    <div class="ir"><span class="ik">Costo personale totale</span><span class="iv">${fmtE(cPers,2)}</span></div>
+    <div class="ir sep"><span class="ik" style="font-weight:700;color:var(--txt)">★ TOTALE PROCESSI</span><span class="iv a">${fmtE(cTotP,2)}</span></div>
+    <div class="ir"><span class="ik">Costo €/lt ingresso</span><span class="iv a">${fmt(volBase>0?cTotP/volBase:0,5)} €/lt</span></div>
+    <div class="ir"><span class="ik">Volume uscita finale</span><span class="iv g">${fmtK(volC)} lt</span></div>
+    <div class="ir"><span class="ik">Resa totale filiera</span><span class="iv g">${fmt(resaFil,2)}%</span></div>`);
+  let cHtml=`<div class="ir"><span class="ik">Volume ingresso</span><span class="iv">${fmtK(volBase)} lt</span></div>`;
+  cascata.filter(c=>c.on).forEach(c=>{
+    cHtml+=`<div class="ir"><span class="ik">${c.nome} → uscita</span><span class="iv g">${fmtK(c.vOut)} lt</span></div>
+      <div class="ir"><span class="ik">Perdita</span><span class="iv r">${fmt(c.perd,1)} lt</span></div>
+      <div class="ir"><span class="ik">Resa processo</span><span class="iv g">${fmt(c.resa,2)}%</span></div>`;
+  });
+  cHtml+=`<div class="ir sep2"><span class="ik" style="font-weight:700;color:var(--acc)">RESA TOTALE FILIERA</span><span class="iv a">${fmt(resaFil,2)}%</span></div>`;
+  set('proc-cascata-box',cHtml);
+  const agr=gs('t-agrume')||'Limone';
+  const pkgMap={'Limone':'ACMA, Goglio, Galdi (Rex), Magnoni (Latte, Vaschette, FBL, F.F.)','Mandarino':'Galdi, Magnoni (Vaschette, Latte, F.F.), FBL','Arancia':'Galdi (Rex), Magnoni (F.F. Standard), 400','Bergamotto':'Magnoni (F.F. NAT), GOE EST+400, BOE+1100'};
+  set('proc-pkg-note',`<strong>📌 Packaging compatibile ${agr}:</strong> ${pkgMap[agr]||'—'}`);
+
+  const att=cascata.filter(c=>c.on&&c.cT>0);
+  mkChart('ch-p-bar','bar',{
+    labels:att.length?att.map(c=>c.nome.split('(')[0].trim().substring(0,14)):['Nessun processo'],
+    datasets:[{data:att.length?att.map(c=>+c.cT.toFixed(2)):[0],
+      backgroundColor:att.length?att.map((_,i)=>COLS[i%COLS.length]):['rgba(106,114,144,.5)'],
+      borderRadius:5,borderSkipped:false}]
+  },barOpts());
+  const attC=cascata.filter(c=>c.on);
+  mkChart('ch-p-cascata','bar',{
+    labels:attC.length?attC.map(c=>c.nome.split('(')[0].trim().substring(0,12)):['Ingresso'],
+    datasets:[
+      {label:'Entrata (lt)',data:attC.length?attC.map(c=>+c.vIn.toFixed(0)):[volBase],backgroundColor:'rgba(91,156,246,.3)',borderColor:'rgba(91,156,246,.8)',borderWidth:1.5,borderRadius:4},
+      {label:'Uscita (lt)',data:attC.length?attC.map(c=>+c.vOut.toFixed(0)):[volBase],backgroundColor:'rgba(78,203,140,.3)',borderColor:'rgba(78,203,140,.8)',borderWidth:1.5,borderRadius:4}
+    ]
+  },{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{color:'#a0a8c0',padding:10,font:{size:10},boxWidth:10}},tooltip:TIP},scales:{x:{grid:{display:false},ticks:{color:'#6a7290'}},y:{grid:GRID,ticks:{color:'#6a7290'}}}});
+}
+
+// ═══════════════════════════════════════════════════════════════
+// DASHBOARD IMBALLAGGI
+// ═══════════════════════════════════════════════════════════════
+function buildDashImb(){
+  return `
+<div class="ey">Costi Packaging · Tutti i Formati</div>
+<h1 class="ptit">Dashboard Imballaggi</h1>
+<p class="psub">Seleziona il packaging — i costi si aggiornano automaticamente dai Costi Unitari</p>
+
+<div class="ibox">
+  <h4>📦 Input Packaging</h4>
+  <div class="irow"><label>Tipo di packaging</label>
+    <select id="i-pkg" onchange="runAll()">
+      <option value="acma">Buste 500gr Surgelate (ACMA)</option>
+      <option value="rex">Rex 500gr brick (Galdi)</option>
+      <option value="goglio">Buste Goglio 3kg</option>
+      <option value="vasch">Vaschette 14kg (Magnoni)</option>
+      <option value="latte">Latte 20kg (Magnoni)</option>
+      <option value="fbl">Fusti FBL 170kg Provv.</option>
+      <option value="ff190" selected>F.F. 190kg Provv. (Magnoni)</option>
+      <option value="ff190std">F.F. Standard 190kg</option>
+    </select></div>
+  <div class="irow"><label>Agrume / Prodotto</label>
+    <span class="badge-ok" id="i-agrume-badge">🍊 Limone</span>
+    <span style="font-size:11px;color:var(--txt3)">← da Dashboard Trasformazione</span></div>
+</div>
+
+<div class="kr">
+  <div class="kc a"><div class="kl">Costo Imball./Unità</div><div class="kv" id="ik-unita">—</div><div class="ks" id="ik-unita-s">—</div></div>
+  <div class="kc g"><div class="kl">★ Costo €/kg</div><div class="kv" id="ik-kg">—</div><div class="ks" id="ik-kg-s">—</div></div>
+  <div class="kc b"><div class="kl">Min €/kg (compat.)</div><div class="kv" id="ik-min">—</div><div class="ks" id="ik-min-s">—</div></div>
+  <div class="kc r"><div class="kl">Max €/kg (compat.)</div><div class="kv" id="ik-max">—</div><div class="ks" id="ik-max-s">—</div></div>
+</div>
+
+<div class="g2">
+  <div>
+    <div class="stit" id="imb-det-title">Componenti Imballaggio</div>
+    <div class="tw"><table>
+      <thead><tr><th>Componente</th><th style="text-align:right">Qtà</th><th style="text-align:right">€/unit.</th><th style="text-align:right">€/unità prod.</th></tr></thead>
+      <tbody id="imb-comp-tbody"></tbody>
+    </table></div>
+    <div class="nb2" id="imb-note">—</div>
+  </div>
+  <div>
+    <div class="stit">Impianto & Configurazione</div>
+    <div class="ic" id="imb-config-box" style="margin-bottom:16px"></div>
+    <div class="stit">Confronto €/kg</div>
+    <div class="ic" id="imb-prog-box"></div>
+  </div>
+</div>
+
+<div class="stit">★ Tutti i Formati — clicca per selezionare</div>
+<div class="pkcg" id="imb-cards"></div>
+
+<div class="stit">📊 Grafici Dinamici Imballaggi</div>
+<div class="g2">
+  <div class="ch-wrap"><h4>Costo €/kg per Formato</h4><div style="height:240px;position:relative"><canvas id="ch-i-bar"></canvas></div></div>
+  <div class="ch-wrap"><h4>Composizione Formato Selezionato</h4><div style="height:240px;position:relative"><canvas id="ch-i-donut"></canvas></div></div>
+</div>
+<div class="pf"><span>PRISMA · Dashboard Imballaggi</span><span>Prezzi da Costi Unitari</span></div>`;
+}
+
+function runImb(){
+  const selKey=gs('i-pkg')||'ff190';
+  const agr=gs('t-agrume')||'Limone';
+  const linea=gs('t-linea-trasf')||'B/SF';
+  const pkg=PKG_DATA[selKey]; if(!pkg) return;
+  const allCosts={};
+  Object.keys(PKG_DATA).forEach(k=>{const c=getPkgCosto(k,agr);allCosts[k]={costo:c,ck:c/PKG_DATA[k].peso};});
+  const compatList=(COMPAT_PKG[agr]&&COMPAT_PKG[agr][linea])||Object.keys(PKG_DATA);
+  const sel=allCosts[selKey];
+  const allE=Object.entries(allCosts);
+  const pool=allE.filter(([k])=>compatList.includes(k));
+  const ppool=pool.length?pool:allE;
+  const minE=ppool.reduce((a,b)=>a[1].ck<b[1].ck?a:b);
+  const maxE=ppool.reduce((a,b)=>a[1].ck>b[1].ck?a:b);
+  set('ik-unita',fmt(sel.costo,3)+'<span class="ku"> €/unità</span>');
+  set('ik-unita-s',pkg.nome+' · '+pkg.peso+' kg netti');
+  set('ik-kg',fmt(sel.ck,5)+'<span class="ku"> €/kg</span>');
+  set('ik-kg-s',pkg.peso+' kg netti per unità');
+  set('ik-min',fmt(minE[1].ck,5)+'<span class="ku"> €/kg</span>');
+  set('ik-min-s',PKG_DATA[minE[0]].nome+' (compat.)');
+  set('ik-max',fmt(maxE[1].ck,5)+'<span class="ku"> €/kg</span>');
+  set('ik-max-s',PKG_DATA[maxE[0]].nome+' (compat.)');
+  set('imb-det-title',`<span style="width:3px;height:3px;border-radius:50%;background:var(--acc);display:inline-block;margin-right:7px"></span>Componenti — ${pkg.nome}`);
+  const compData=pkg.comp.map(c=>{
+    let key=c.k;
+    if(key==='_rex_dynamic') key=getRexKey(agr);
+    if(key==='_crex_dynamic') key=getCartRexKey(agr);
+    const vu=CU(key)||0; return {n:c.n,q:c.q,vu,val:c.q*vu};
+  });
+  let tot=0; compData.forEach(c=>{tot+=c.val;});
+  set('imb-comp-tbody',compData.map(c=>`<tr><td class="lc">${c.n}</td>
+    <td class="n">${fmt(c.q,4)}</td><td class="n">${fmt(c.vu,4)}</td>
+    <td class="n av">${fmt(c.val,4)}</td></tr>`).join('')+
+    `<tr style="background:var(--bg3)"><td class="lc" colspan="3"><strong>Costo totale</strong></td>
+    <td class="n av" style="font-size:14px"><strong>${fmt(tot,3)} €</strong></td></tr>
+    <tr style="background:var(--bg3)"><td class="lc" colspan="3"><strong>★ €/kg prodotto</strong></td>
+    <td class="n gv" style="font-size:14px"><strong>${fmt(sel.ck,5)} €/kg</strong></td></tr>`);
+  set('imb-note',`<strong>ℹ️</strong> REX usa il prezzo specifico per ${agr} · ${compatList.length} formati compatibili con ${agr}+${linea}`);
+  const isC=compatList.includes(selKey);
+  set('imb-config-box',`
+    <div class="ir"><span class="ik">Packaging</span><span class="iv a">${pkg.nome}</span></div>
+    <div class="ir"><span class="ik">Impianto</span><span class="iv">${pkg.imp}</span></div>
+    <div class="ir"><span class="ik">Agrume</span><span class="iv">🍊 ${agr}</span></div>
+    <div class="ir"><span class="ik">Linea</span><span class="iv">${linea}</span></div>
+    <div class="ir"><span class="ik">Compatibilità</span><span class="iv ${isC?'g':'r'}">${isC?'✓ Compatibile':'⚠ Non compatibile'}</span></div>
+    <div class="ir"><span class="ik">Peso netto / unità</span><span class="iv">${pkg.peso} kg</span></div>
+    <div class="ir"><span class="ik">Costo / unità</span><span class="iv a">${fmt(sel.costo,3)} €</span></div>
+    <div class="ir sep2"><span class="ik" style="font-weight:700;color:var(--txt)">★ €/kg</span><span class="iv g">${fmt(sel.ck,5)}</span></div>`);
+  const maxKg=Math.max(...allE.map(([,v])=>v.ck));
+  set('imb-prog-box',allE.map(([k,v])=>{
+    const p=maxKg>0?v.ck/maxKg*100:0, isSel=k===selKey, isCk=compatList.includes(k);
+    const cl=isSel?'fa':k===maxE[0]?'fr':k===minE[0]?'fg':isCk?'fb':'fd2';
+    return `<div class="pr"><div class="prh"><span class="prl">${PKG_DATA[k].nome}${isSel?' ★':''} ${isCk?'':'<span style="color:var(--red);font-size:9px">✗</span>'}</span>
+      <span class="prv" style="${isSel?'color:var(--acc)':''}">${fmt(v.ck,5)} €/kg</span></div>
+      <div class="prb"><div class="prf ${cl}" style="width:${p}%;${!isCk?'opacity:.3':''}"></div></div></div>`;
+  }).join(''));
+  set('imb-cards',allE.map(([k,v])=>{
+    const isSel=k===selKey, isCk=compatList.includes(k);
+    const col=k===maxE[0]?'var(--red)':k===minE[0]?'var(--grn)':'var(--acc)';
+    return `<div class="pkc ${isSel?'sel':''}" onclick="document.getElementById('i-pkg').value='${k}';runAll()"
+      style="${!isCk?'opacity:.5;border-style:dashed':''}">
+      <div class="pkn">${PKG_DATA[k].nome}${isSel?' ★':''}</div>
+      <div class="pkw">${PKG_DATA[k].peso} kg · ${PKG_DATA[k].imp}${!isCk?' · <span style="color:var(--red);font-size:9px">✗</span>':''}</div>
+      <div style="font-family:var(--fd);font-size:24px;line-height:1;color:${col};margin:5px 0 2px">${fmt(v.costo,3)}<span style="font-size:10px;color:var(--txt3);margin-left:2px">€/unità</span></div>
+      <div style="font-size:11px;color:var(--txt3)">${fmt(v.ck,5)} €/kg</div></div>`;
+  }).join(''));
+  set('cu-impact-imb',`
+    <h4>📦 Impatto su Imballaggi</h4>
+    <div class="ir"><span class="ik">Formato selezionato</span><span class="iv a">${pkg.nome}</span></div>
+    <div class="ir"><span class="ik">Costo €/unità</span><span class="iv a">${fmt(sel.costo,3)} €</span></div>
+    <div class="ir"><span class="ik">Costo €/kg</span><span class="iv g">${fmt(sel.ck,5)} €/kg</span></div>
+    <div class="ir"><span class="ik">Min €/kg (compat.)</span><span class="iv g">${PKG_DATA[minE[0]].nome}: ${fmt(minE[1].ck,5)}</span></div>
+    <div class="ir"><span class="ik">Max €/kg (compat.)</span><span class="iv r">${PKG_DATA[maxE[0]].nome}: ${fmt(maxE[1].ck,5)}</span></div>
+    <div class="ir"><span class="ik">Formati compatibili</span><span class="iv">${compatList.length} / ${Object.keys(PKG_DATA).length}</span></div>`);
+  mkChart('ch-i-bar','bar',{
+    labels:allE.map(([k])=>PKG_DATA[k].nome),
+    datasets:[{data:allE.map(([,v])=>+v.ck.toFixed(5)),
+      backgroundColor:allE.map(([k])=>{const iCk=compatList.includes(k);return k===selKey?COLS[0]:k===maxE[0]?COLS[3]:k===minE[0]?COLS[2]:iCk?COLS[1]:'rgba(106,114,144,.25)';}),
+      borderRadius:4,borderSkipped:false}]
+  },{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false},tooltip:{...TIP,callbacks:{label:ctx=>' '+ctx.parsed.x.toFixed(5)+' €/kg'}}},scales:{x:{grid:GRID,ticks:{color:'#6a7290',callback:v=>v.toFixed(3)+'€'}},y:{grid:{display:false},ticks:{color:'#6a7290',font:{size:10}}}}});
+  mkChart('ch-i-donut','doughnut',{
+    labels:compData.map(c=>c.n),
+    datasets:[{data:compData.map(c=>+c.val.toFixed(4)),backgroundColor:COLS,borderColor:'#1e2230',borderWidth:2,hoverOffset:6}]
+  },donutOpts());
+}
+
+// ═══════════════════════════════════════════════════════════════
+// COSTI UNITARI
+// ═══════════════════════════════════════════════════════════════
+function buildCostiUnitari(){
+  return `
+<div class="ey">Parametri Master · Input Globali</div>
+<h1 class="ptit">Costi Unitari</h1>
+<p class="psub">Modifica questi valori — si propagano automaticamente in tutte le Dashboard</p>
+<div class="nb2"><strong>🔗 Collegamento totale:</strong> Ogni modifica aggiorna in tempo reale tutte e 3 le dashboard, i grafici, e tutti i calcoli della filiera completa. Se hai caricato un file Excel, questi valori sono stati prelevati automaticamente.</div>
+
+<div class="g2">
+  <div>
+    <div class="ibox">
+      <h4>⚡ Energia & 💨 Vapore</h4>
+      <div class="irow"><label>Costo energia elettrica (€/kWh)</label><input type="number" id="cu-kwh" value="0.21" min="0.01" step="0.01" oninput="runAll()"></div>
+      <div class="irow"><label>Costo vapore saturo (€/kg)</label><input type="number" id="cu-vap" value="0.0555" min="0.001" step="0.001" oninput="runAll()"></div>
+    </div>
+    <div class="ibox">
+      <h4>👷 Personale — €/h lordi</h4>
+      <div class="irow"><label>Addetto acquisto frutta (F.1)</label><input type="number" id="cu-p1" value="50" min="10" step="1" oninput="runAll()"></div>
+      <div class="irow"><label>Addetto ricezione frutta (F.2)</label><input type="number" id="cu-p2" value="45" min="10" step="1" oninput="runAll()"></div>
+      <div class="irow"><label>Carrellista / Scarico (F.3)</label><input type="number" id="cu-p3" value="30" min="10" step="1" oninput="runAll()"></div>
+      <div class="irow"><label>Addetto preparazione (F.4)</label><input type="number" id="cu-p4" value="30" min="10" step="1" oninput="runAll()"></div>
+      <div class="irow"><label>Addetto trasformazione (F.5)</label><input type="number" id="cu-p5" value="25" min="10" step="1" oninput="runAll()"></div>
+      <div class="irow"><label>Addetto centrifugazione (F.6)</label><input type="number" id="cu-p6" value="35" min="10" step="1" oninput="runAll()"></div>
+      <div class="irow"><label>Addetto lavaggio linee (F.9)</label><input type="number" id="cu-p9" value="30" min="10" step="1" oninput="runAll()"></div>
+      <div class="irow"><label>Addetto Chiarificazione</label><input type="number" id="cu-pch" value="35" min="10" step="1" oninput="runAll()"></div>
+      <div class="irow"><label>Addetto Pastorizzazione</label><input type="number" id="cu-ppa" value="30" min="10" step="1" oninput="runAll()"></div>
+      <div class="irow"><label>Addetto Disoleazione</label><input type="number" id="cu-pdi" value="30" min="10" step="1" oninput="runAll()"></div>
+      <div class="irow"><label>Addetto Microfiltrazione</label><input type="number" id="cu-pmi" value="30" min="10" step="1" oninput="runAll()"></div>
+      <div class="irow"><label>Addetto Concentrazione</label><input type="number" id="cu-pco" value="30" min="10" step="1" oninput="runAll()"></div>
+      <div class="irow"><label>Addetto Confezionamento</label><input type="number" id="cu-pcf" value="30" min="10" step="1" oninput="runAll()"></div>
+      <div class="irow"><label>Addetto manovalanza</label><input type="number" id="cu-pma" value="30" min="10" step="1" oninput="runAll()"></div>
+    </div>
+  </div>
+  <div>
+    <div class="ibox">
+      <h4>📦 Pedane</h4>
+      <div class="irow"><label>Pedana 80×120 nuova (€/pz)</label><input type="number" id="cu-ped80" value="20" min="0" step="0.5" oninput="runAll()"></div>
+      <div class="irow"><label>Pedana 100×120 nuova (€/pz)</label><input type="number" id="cu-ped100" value="19" min="0" step="0.5" oninput="runAll()"></div>
+      <div class="irow"><label>Pedana 100×120 usata (€/pz)</label><input type="number" id="cu-pedus" value="1.5" min="0" step="0.1" oninput="runAll()"></div>
+      <div class="irow"><label>Pedana 120×120 nuova (€/pz)</label><input type="number" id="cu-ped120" value="21.26" min="0" step="0.1" oninput="runAll()"></div>
+      <div class="irow"><label>Pedana usata generica (€/pz)</label><input type="number" id="cu-pedug" value="1.5" min="0" step="0.1" oninput="runAll()"></div>
+      <div class="irow"><label>Pedana F.F. Standard nuova (€/pz)</label><input type="number" id="cu-pedff" value="21.26" min="0" step="0.1" oninput="runAll()"></div>
+    </div>
+    <div class="ibox">
+      <h4>📦 Contenitori Primari</h4>
+      <div class="irow"><label>Bustina 500gr ACMA PE (€/pz)</label><input type="number" id="cu-busta500" value="0.07" min="0" step="0.005" oninput="runAll()"></div>
+      <div class="irow"><label>Cartone buste 500gr surg. (€/pz)</label><input type="number" id="cu-cart500" value="0.725" min="0" step="0.01" oninput="runAll()"></div>
+      <div class="irow"><label>REX 500gr – Limone (€/pz)</label><input type="number" id="cu-rex-lim" value="0.10442" min="0" step="0.001" oninput="runAll()"></div>
+      <div class="irow"><label>REX 500gr – Arancia/Pompelmo (€/pz)</label><input type="number" id="cu-rex-ara" value="0.0995" min="0" step="0.001" oninput="runAll()"></div>
+      <div class="irow"><label>REX 500gr – Bergamotto (€/pz)</label><input type="number" id="cu-rex-ber" value="0.12935" min="0" step="0.001" oninput="runAll()"></div>
+      <div class="irow"><label>REX 500gr – Mandarino (€/pz)</label><input type="number" id="cu-rex-man" value="0.0995" min="0" step="0.001" oninput="runAll()"></div>
+      <div class="irow"><label>Cartone Rex – Limone (€/pz)</label><input type="number" id="cu-crex-lim" value="0.7" min="0" step="0.01" oninput="runAll()"></div>
+      <div class="irow"><label>Cartone Rex – Mandarino (€/pz)</label><input type="number" id="cu-crex-man" value="0.65" min="0" step="0.01" oninput="runAll()"></div>
+      <div class="irow"><label>Cartone Rex – Pompelmo (€/pz)</label><input type="number" id="cu-crex-pom" value="0.901" min="0" step="0.01" oninput="runAll()"></div>
+      <div class="irow"><label>Busta Goglio 3kg (€/pz)</label><input type="number" id="cu-gog" value="0.495" min="0" step="0.01" oninput="runAll()"></div>
+      <div class="irow"><label>Cartone Goglio 3kg (€/pz)</label><input type="number" id="cu-cgog" value="0.725" min="0" step="0.01" oninput="runAll()"></div>
+      <div class="irow"><label>Vaschetta 14kg (€/pz)</label><input type="number" id="cu-vasch" value="2.45" min="0" step="0.05" oninput="runAll()"></div>
+      <div class="irow"><label>Coperchio vaschetta 14kg (€/pz)</label><input type="number" id="cu-cop" value="0.20" min="0" step="0.01" oninput="runAll()"></div>
+      <div class="irow"><label>Latta 20kg (€/pz)</label><input type="number" id="cu-latta" value="6.52" min="0" step="0.1" oninput="runAll()"></div>
+      <div class="irow"><label>Cisterna IBC 1000lt (€/pz)</label><input type="number" id="cu-ibc" value="332" min="0" step="1" oninput="runAll()"></div>
+      <div class="irow"><label>Bottiglietta Kartell 50ml (€/pz)</label><input type="number" id="cu-kart" value="0.49" min="0" step="0.01" oninput="runAll()"></div>
+    </div>
+    <div class="ibox">
+      <h4>📦 Fusti & Ausiliari</h4>
+      <div class="irow"><label>Sacchetto PET blu pesante (€/pz)</label><input type="number" id="cu-pet" value="1.3" min="0" step="0.05" oninput="runAll()"></div>
+      <div class="irow"><label>Sacchetto PET blu leggero (€/pz)</label><input type="number" id="cu-petleg" value="0.62" min="0" step="0.01" oninput="runAll()"></div>
+      <div class="irow"><label>Mezzo sacchetto PET blu (€/pz)</label><input type="number" id="cu-petmez" value="0.31" min="0" step="0.01" oninput="runAll()"></div>
+      <div class="irow"><label>Stretch foil (€/kg)</label><input type="number" id="cu-str" value="3.0" min="0" step="0.1" oninput="runAll()"></div>
+      <div class="irow"><label>Stretch foil x pedana stima (€/pz)</label><input type="number" id="cu-strped" value="0.08" min="0" step="0.01" oninput="runAll()"></div>
+      <div class="irow"><label>Falda 80×120 (€/pz)</label><input type="number" id="cu-falda" value="0.15" min="0" step="0.01" oninput="runAll()"></div>
+      <div class="irow"><label>Sacchetto blu piccolo (€/pz)</label><input type="number" id="cu-sblu" value="0.1" min="0" step="0.01" oninput="runAll()"></div>
+      <div class="irow"><label>Fusto ferro nuovo (€/pz)</label><input type="number" id="cu-fustonew" value="0" min="0" step="1" oninput="runAll()"></div>
+      <div class="irow"><label>Fusto ferro usato (€/pz)</label><input type="number" id="cu-fusto" value="5.0" min="0" step="0.1" oninput="runAll()"></div>
+      <div class="irow"><label>FBL usato (€/pz)</label><input type="number" id="cu-fbl" value="3.0" min="0" step="0.1" oninput="runAll()"></div>
+    </div>
+  </div>
+</div>
+
+<div class="stit">📊 Tariffe Personale per Ruolo</div>
+<div class="ch-wrap"><h4>Costo orario €/h per figura professionale</h4>
+  <div style="height:250px;position:relative"><canvas id="ch-cu-bar"></canvas></div></div>
+
+<div class="stit">Impatto sulle Dashboard</div>
+<div class="g2">
+  <div class="ic" id="cu-impact-trasf"></div>
+  <div class="ic" id="cu-impact-imb"></div>
+</div>
+<div class="pf"><span>PRISMA · Parametri Master</span><span>Propagazione in tempo reale</span></div>`;
+}
+
+function runCU(){
+  const ruoli=['Acquisto','Ricezione','Scarico','Prep.','Trasf.','Centrif.','Lavaggio','Chiarif.','Pastorizz.','Disoleaz.','Microfiltr.','Concentr.','Confez.','Manovale'];
+  const keys=['cu-p1','cu-p2','cu-p3','cu-p4','cu-p5','cu-p6','cu-p9','cu-pch','cu-ppa','cu-pdi','cu-pmi','cu-pco','cu-pcf','cu-pma'];
+  const vals=keys.map(k=>CU(k));
+  const maxV=Math.max(...vals);
+  mkChart('ch-cu-bar','bar',{
+    labels:ruoli,
+    datasets:[{data:vals,
+      backgroundColor:vals.map(v=>v===maxV?COLS[0]:v<27?COLS[4]:COLS[1]),
+      borderRadius:5,borderSkipped:false}]
+  },{...barOpts(),plugins:{legend:{display:false},tooltip:{...TIP,callbacks:{label:ctx=>' '+ctx.parsed.y+' €/h'}}}});
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MIX PREZZI VENDITA
+// ═══════════════════════════════════════════════════════════════
+function buildMixPrezzi(){
+  const rows=SHEETS['Mix Prezzi Vendita'];
+  if(!rows||rows.length===0){
+    return `<div class="ey">Prezzi Vendita</div><h1 class="ptit">Mix Prezzi Vendita</h1>
+      <div class="nb2"><strong>ℹ️</strong> Carica il file Excel per visualizzare i dati.</div>`;
+  }
+  // estrae dati dal foglio
+  let html=`<div class="ey">Prezzi Vendita · Prezzo Medio Ponderato</div>
+    <h1 class="ptit">Mix Prezzi Vendita</h1>
+    <p class="psub">Prezzi e mix percentuali per canale — il prezzo medio ponderato alimenta la Dashboard Trasformazione</p>`;
+  html+=buildRawSheet('d-mix',{label:'Mix Prezzi Vendita',sheet:'Mix Prezzi Vendita',icon:'💰'}).replace(/^.*<div class="ey">.*<\/p>/s,'');
+  return html;
+}
+function runMix(){ /* visualizzazione raw, nessun calcolo aggiuntivo */ }
+
+// ═══════════════════════════════════════════════════════════════
+// MASTER RECALC
+// ═══════════════════════════════════════════════════════════════
+function runAll(){
+  // Solo ricalcola le pagine già presenti nel DOM
+  if(document.getElementById('page-dash-trasf')) runTrasf();
+  if(document.getElementById('page-dash-proc'))  runProc();
+  if(document.getElementById('page-dash-imb'))   runImb();
+  if(document.getElementById('page-d-cu'))       runCU();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// EXPORT XLSX
+// ═══════════════════════════════════════════════════════════════
+function exportXLSX(){
+  if(!WB){ alert('Carica prima un file Excel'); return; }
+  // Aggiorna le celle mappate con i valori correnti degli input
+  const MAP={
+    'DASHBOARD TRASF.':{B5:'t-kg'},
+    'Costi unitari':{
+      B3:'cu-p1',B4:'cu-p2',B5:'cu-p3',B6:'cu-p4',B7:'cu-p5',B8:'cu-p6',
+      B11:'cu-p9',B12:'cu-pch',B13:'cu-ppa',B14:'cu-pdi',B15:'cu-pmi',
+      B16:'cu-pco',B17:'cu-pcf',B18:'cu-pma',B22:'cu-kwh',B26:'cu-vap',
+      B31:'cu-ped80',B32:'cu-ped100',B33:'cu-pedus',B34:'cu-ped120',
+      B39:'cu-cart500',B40:'cu-busta500',B41:'cu-rex-lim',B42:'cu-rex-ara',
+      B43:'cu-rex-ber',B44:'cu-rex-man',B49:'cu-gog',B50:'cu-cgog',
+      B51:'cu-vasch',B52:'cu-cop',B53:'cu-latta',B54:'cu-pet',B62:'cu-str',
+      B64:'cu-sblu',B68:'cu-fusto',B69:'cu-fbl'
+    }
+  };
+  Object.entries(MAP).forEach(([sName,cells])=>{
+    const ws=WB.Sheets[sName]; if(!ws) return;
+    Object.entries(cells).forEach(([addr,inputId])=>{
+      const val=gv(inputId);
+      if(ws[addr]) ws[addr].v=val;
+      else ws[addr]={t:'n',v:val};
+    });
+  });
+  const outName=fileName.replace('.xlsx','')+'_PRISMA_export.xlsx';
+  XLSX.writeFile(WB, outName);
+  showStatus('ok','✓ File esportato: '+outName);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// DRAG AND DROP
+// ═══════════════════════════════════════════════════════════════
+document.addEventListener('dragover', e=>{ e.preventDefault(); e.dataTransfer.dropEffect='copy'; });
+document.addEventListener('drop', e=>{
+  e.preventDefault();
+  const files=e.dataTransfer.files;
+  if(files.length>0 && files[0].name.match(/\.xlsx?$/i)){
+    const fakeInput={files:[files[0]]};
+    loadFile(fakeInput);
+  }
+});
+
+// init nav vuoto (senza file)
+buildNav();
+// Apertura gruppo dashboard di default
+setTimeout(()=>{
+  const h=document.querySelector('.nav-group-header');
+  if(h && !h.classList.contains('open')){h.click();}
+},100);
+</script>
 </body>
 </html>
